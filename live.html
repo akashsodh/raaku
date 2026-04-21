@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPL – Live Score</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .live-container { max-width: 840px; margin: 0 auto; padding: 40px 20px; }
+
+    .live-scoreboard {
+      background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .live-scoreboard::before {
+      content: ''; position: absolute; top:0;left:0;right:0;height:4px;
+      background: linear-gradient(90deg, var(--danger), var(--gold));
+    }
+
+    .live-indicator {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px;
+      background: rgba(255,71,87,0.15);
+      border: 1px solid rgba(255,71,87,0.4);
+      border-radius: 20px;
+      margin-bottom: 20px;
+      animation: pulseBorder 2s ease-in-out infinite;
+    }
+    @keyframes pulseBorder { 0%,100% { box-shadow: 0 0 0 0 rgba(255,71,87,0.4); } 50% { box-shadow: 0 0 0 6px rgba(255,71,87,0); } }
+
+    .live-dot-lg {
+      width: 10px; height: 10px; border-radius: 50%; background: var(--danger);
+      animation: pd 1s ease-in-out infinite;
+    }
+    @keyframes pd { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(1.4); } }
+
+    .live-indicator-text { font-size: 12px; font-weight: 700; letter-spacing: 3px; color: var(--danger); text-transform: uppercase; }
+
+    .live-matchup {
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .live-team-name {
+      font-family: var(--font-display);
+      font-size: 28px;
+      letter-spacing: 2px;
+    }
+    .live-vs-badge {
+      font-size: 13px; font-weight: 700; letter-spacing: 2px;
+      color: var(--gold); background: rgba(245,166,35,0.1);
+      border: 1px solid rgba(245,166,35,0.3);
+      padding: 6px 14px; border-radius: 6px;
+    }
+
+    .live-score-big {
+      font-family: var(--font-display);
+      font-size: 80px;
+      line-height: 1;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+    .live-overs-text {
+      font-size: 20px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    .live-crr {
+      font-size: 14px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+    }
+    .live-innings-label {
+      display: inline-block;
+      background: rgba(245,166,35,0.1);
+      border: 1px solid rgba(245,166,35,0.2);
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .target-bar {
+      background: rgba(245,166,35,0.08);
+      border: 1px solid rgba(245,166,35,0.2);
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin: 16px 0;
+    }
+    .target-bar-label { font-size: 11px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
+    .target-bar-text  { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; color: var(--gold); }
+
+    .batsmen-panel {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
+    }
+    .batsman-row {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .batsman-row.striker { border-color: rgba(245,166,35,0.4); background: rgba(245,166,35,0.04); }
+
+    .br-label { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
+    .br-name  { font-family: var(--font-display); font-size: 18px; letter-spacing: 1.5px; color: var(--text); }
+    .br-stats { font-size: 16px; color: var(--gold); font-weight: 700; letter-spacing: 1px; margin-top: 2px; }
+    .br-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; letter-spacing: 1px; }
+
+    .bowler-row {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .update-bar {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-top: 16px;
+    }
+    .refresh-btn {
+      background: none; border: none; color: var(--gold); cursor: pointer;
+      font-size: 14px; letter-spacing: 1px; font-family: var(--font-body);
+      font-weight: 700; padding: 6px 14px; border: 1px solid rgba(245,166,35,0.3);
+      border-radius: 6px; transition: all 0.3s ease; margin-left: 8px;
+    }
+    .refresh-btn:hover { background: rgba(245,166,35,0.1); }
+
+    .no-live-box {
+      text-align: center; padding: 80px 20px;
+    }
+    .no-live-box .icon { font-size: 64px; margin-bottom: 16px; opacity: 0.4; }
+    .no-live-box h2 { font-family: var(--font-display); font-size: 28px; letter-spacing: 3px; color: var(--text-muted); margin-bottom: 8px; }
+    .no-live-box p  { color: var(--text-dim); font-size: 14px; letter-spacing: 1px; }
+
+    @media (max-width: 500px) {
+      .batsmen-panel { grid-template-columns: 1fr; }
+      .live-score-big { font-size: 56px; }
+      .live-matchup { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">MPL</a>
+      <button class="nav-toggle" id="navToggle">☰</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="teams.html">Teams</a></li>
+        <li><a href="players.html">Players</a></li>
+        <li><a href="fixtures.html">Fixtures</a></li>
+        <li><a href="live.html" class="active">🔴 Live</a></li>
+        <li><a href="rules.html">Rules</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page-hero" style="height:200px;">
+    <div class="hero-content" style="padding-top:70px;">
+      <h1 class="hero-title">🔴 LIVE SCORE</h1>
+      <p class="hero-sub">Real-time match updates</p>
+    </div>
+  </div>
+
+  <div class="live-container">
+    <div id="liveContent"></div>
+    <div class="update-bar">
+      Auto refresh: <span id="countdown">30</span>s
+      <button class="refresh-btn" onclick="refresh()">↻ REFRESH NOW</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-logo">MPL</div>
+      <p class="footer-text">Mamana Premier League</p>
+    </div>
+  </footer>
+
+  <script src="js/storage.js"></script>
+<script src="js/main.js"></script>
+  <script>
+    function formatOvers(balls) { return `${Math.floor(balls/6)}.${balls%6}`; }
+
+    function renderLive() {
+      const matches = MPL_STORAGE.getMatches().filter(m => m.status === 'live');
+      const teams   = MPL_STORAGE.getTeams();
+      const el      = document.getElementById('liveContent');
+
+      if (matches.length === 0) {
+        el.innerHTML = `
+          <div class="no-live-box">
+            <div class="icon">😴</div>
+            <h2>NO LIVE MATCH</h2>
+            <p>Abhi koi match live nahi hai. Upcoming matches dekho.</p>
+            <a href="fixtures.html" style="display:inline-block;margin-top:20px;padding:10px 22px;border:1px solid var(--gold);border-radius:8px;color:var(--gold);font-weight:700;letter-spacing:2px;font-size:13px;">
+              📅 VIEW FIXTURES
+            </a>
+          </div>`;
+        return;
+      }
+
+      el.innerHTML = matches.map(m => {
+        const tA = teams.find(t => t.id === m.teamAId);
+        const tB = teams.find(t => t.id === m.teamBId);
+        const tAc = tA ? tA.color : '#F5A623';
+        const tBc = tB ? tB.color : '#F5A623';
+
+        // Try to load scoring state
+        let scoreHtml = '';
+        try {
+          const sc = JSON.parse(localStorage.getItem('mpl_scoring_state') || 'null');
+          if (sc && sc.matchId === m.id) {
+            const inn = sc.currentInnings === 1 ? sc.innings1 : sc.innings2;
+            if (inn) {
+              const crr = inn.balls > 0 ? (inn.runs / (inn.balls / 6)).toFixed(2) : '0.00';
+              const battingTeam = teams.find(t => t.id === inn.battingTeamId);
+              const inningsNum = sc.currentInnings === 1 ? '1ST INNINGS' : '2ND INNINGS';
+
+              // Striker / NonStriker
+              const getP = (id) => { const p = MPL_STORAGE.getPlayers().find(x => x.id === id); return p ? p.name : '—'; };
+              const getBat = (id, inn) => inn.batsmen[id] || { runs:0, balls:0 };
+
+              const sBat = getBat(inn.striker, inn);
+              const nBat = getBat(inn.nonStriker, inn);
+              const bBowl = inn.bowlers[inn.currentBowler] || { balls:0, runs:0, wickets:0 };
+              const bowlName = getP(inn.currentBowler);
+
+              let targetHtml = '';
+              if (sc.currentInnings === 2 && sc.innings1) {
+                const target = sc.innings1.runs + 1;
+                const need   = target - inn.runs;
+                const bleft  = (m.overs * 6) - inn.balls;
+                targetHtml = `
+                  <div class="target-bar">
+                    <div class="target-bar-label">Chasing</div>
+                    <div class="target-bar-text">Need ${Math.max(0,need)} off ${bleft} balls (Target: ${target})</div>
+                  </div>`;
+              }
+
+              scoreHtml = `
+                <div class="live-scoreboard">
+                  <div class="live-indicator"><div class="live-dot-lg"></div><div class="live-indicator-text">LIVE</div></div>
+                  <div class="live-matchup">
+                    <span class="live-team-name" style="color:${tAc};">${tA ? tA.name : 'Team A'}</span>
+                    <span class="live-vs-badge">VS</span>
+                    <span class="live-team-name" style="color:${tBc};">${tB ? tB.name : 'Team B'}</span>
+                  </div>
+                  <div class="live-innings-label">${inningsNum} — ${battingTeam ? battingTeam.name : ''} BATTING</div>
+                  <div class="live-score-big">${inn.runs}/${inn.wickets}</div>
+                  <div class="live-overs-text">(${formatOvers(inn.balls)} / ${m.overs} Overs)</div>
+                  <div class="live-crr">CRR: ${crr}</div>
+                  ${targetHtml}
+                </div>
+
+                <div class="batsmen-panel">
+                  <div class="batsman-row striker">
+                    <div class="br-label">🏏 STRIKER ★</div>
+                    <div class="br-name">${getP(inn.striker)}</div>
+                    <div class="br-stats">${sBat.runs}(${sBat.balls})</div>
+                    <div class="br-sub">SR: ${sBat.balls>0?((sBat.runs/sBat.balls)*100).toFixed(1):'0.0'}</div>
+                  </div>
+                  <div class="batsman-row">
+                    <div class="br-label">🏏 NON-STRIKER</div>
+                    <div class="br-name">${getP(inn.nonStriker)}</div>
+                    <div class="br-stats">${nBat.runs}(${nBat.balls})</div>
+                    <div class="br-sub">SR: ${nBat.balls>0?((nBat.runs/nBat.balls)*100).toFixed(1):'0.0'}</div>
+                  </div>
+                </div>
+
+                <div class="bowler-row">
+                  <div>
+                    <div class="br-label">🎯 BOWLING</div>
+                    <div class="br-name">${bowlName}</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div class="br-stats">${formatOvers(bBowl.balls)}-${bBowl.runs}-${bBowl.wickets}</div>
+                    <div class="br-sub">Econ: ${bBowl.balls>0?(bBowl.runs/(bBowl.balls/6)).toFixed(2):'0.00'}</div>
+                  </div>
+                </div>`;
+            }
+          }
+        } catch (e) {}
+
+        if (!scoreHtml) {
+          scoreHtml = `
+            <div class="live-scoreboard">
+              <div class="live-indicator"><div class="live-dot-lg"></div><div class="live-indicator-text">LIVE</div></div>
+              <div class="live-matchup">
+                <span class="live-team-name" style="color:${tAc};">${tA ? tA.name : 'Team A'}</span>
+                <span class="live-vs-badge">VS</span>
+                <span class="live-team-name" style="color:${tBc};">${tB ? tB.name : 'Team B'}</span>
+              </div>
+              <div style="font-size:14px;color:var(--text-dim);letter-spacing:2px;margin-top:12px;">
+                Match #${m.matchNumber || '?'} — ${m.overs} Overs${m.venue ? ' @ ' + m.venue : ''}
+              </div>
+            </div>`;
+        }
+
+        return scoreHtml;
+      }).join('');
+    }
+
+    // Auto refresh
+    let count = 30;
+    function refresh() { count = 30; renderLive(); }
+    setInterval(() => {
+      count--;
+      document.getElementById('countdown').textContent = count;
+      if (count <= 0) { count = 30; renderLive(); }
+    }, 1000);
+
+    renderLive();
+  </script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPL – Points Table</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .st-wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px 60px; }
+
+    /* Top summary cards */
+    .leader-cards {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px; margin-bottom: 28px;
+    }
+    .leader-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .leader-card::before {
+      content: ''; position: absolute; top:0; left:0; right:0; height:3px;
+    }
+    .leader-card.gold::before   { background: var(--gold); }
+    .leader-card.silver::before { background: #9BA3AF; }
+    .leader-card.bronze::before { background: #CD7F32; }
+
+    .lc-pos  { font-size: 11px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 6px; }
+    .lc-team { font-family: var(--font-display); font-size: 20px; letter-spacing: 2px; }
+    .lc-pts  { font-family: 'Teko', sans-serif; font-size: 32px; font-weight: 600; color: var(--gold); line-height: 1; }
+    .lc-pts-label { font-size: 10px; letter-spacing: 1px; color: var(--text-dim); }
+
+    /* Points table */
+    .table-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .table-title {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      font-family: var(--font-display); font-size: 18px;
+      letter-spacing: 2px; color: var(--gold);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .table-title span { font-size: 11px; color: var(--text-dim); font-family: var(--font-body); letter-spacing: 1px; }
+
+    .pts-table-wrap { overflow-x: auto; }
+    .pts-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .pts-table th {
+      padding: 10px 14px; font-size: 10px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-dim); text-align: right;
+      background: var(--bg-elevated); white-space: nowrap;
+    }
+    .pts-table th:first-child,
+    .pts-table th:nth-child(2) { text-align: left; }
+
+    .pts-table td {
+      padding: 12px 14px; border-top: 1px solid var(--border);
+      text-align: right; white-space: nowrap; color: var(--text-muted);
+    }
+    .pts-table td:first-child,
+    .pts-table td:nth-child(2) { text-align: left; }
+
+    .pts-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* Top 4 highlight */
+    .pts-table tbody tr.qualify { background: rgba(0,210,106,0.04); }
+    .pts-table tbody tr.qualify td:first-child::before {
+      content: ''; display: inline-block; width: 3px; height: 16px;
+      background: var(--success); border-radius: 2px;
+      margin-right: 8px; vertical-align: middle;
+    }
+
+    .pos-num { font-family: 'Teko',sans-serif; font-size: 20px; color: var(--text-dim); font-weight: 700; }
+    .pos-1 { color: var(--gold); }
+    .pos-2 { color: #9BA3AF; }
+    .pos-3 { color: #CD7F32; }
+
+    .team-cell { display: flex; align-items: center; gap: 10px; }
+    .team-dot-st { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .team-name-st { font-family: var(--font-display); font-size: 16px; letter-spacing: 1.5px; color: var(--text); }
+
+    .pts-val { font-family: 'Teko',sans-serif; font-size: 20px; color: var(--gold); font-weight: 600; }
+    .nrr-pos { color: #00D26A; }
+    .nrr-neg { color: var(--danger); }
+
+    /* Form dots */
+    .form-dots { display: flex; gap: 4px; justify-content: flex-end; }
+    .fd {
+      width: 20px; height: 20px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 700; letter-spacing: 0;
+    }
+    .fd-W  { background: rgba(0,210,106,0.2); color: #00D26A; border: 1px solid rgba(0,210,106,0.4); }
+    .fd-L  { background: rgba(255,71,87,0.2);  color: #FF4757; border: 1px solid rgba(255,71,87,0.4); }
+    .fd-NR { background: rgba(255,165,0,0.2);  color: #FFA502; border: 1px solid rgba(255,165,0,0.4); }
+
+    /* Playoff zone label */
+    .playoff-divider {
+      text-align: center; padding: 8px; font-size: 10px;
+      letter-spacing: 2px; color: var(--text-dim); background: var(--bg-elevated);
+      border-top: 1px dashed rgba(0,210,106,0.3);
+    }
+
+    /* Legend */
+    .legend {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px;
+      padding: 12px 14px; background: var(--bg-elevated);
+      border-radius: 8px; font-size: 11px; color: var(--text-dim); letter-spacing: 1px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+
+    @media (max-width: 500px) {
+      .pts-table th:nth-child(n+6) { display: none; }
+      .pts-table td:nth-child(n+6) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo">MPL</a>
+    <button class="nav-toggle" id="navToggle">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="teams.html">Teams</a></li>
+      <li><a href="players.html">Players</a></li>
+      <li><a href="fixtures.html">Fixtures</a></li>
+      <li><a href="live.html">🔴 Live</a></li>
+      <li><a href="standings.html" class="active">Table</a></li>
+      <li><a href="stats.html">Stats</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page-hero" style="height:200px;">
+  <div class="hero-content" style="padding-top:70px;">
+    <h1 class="hero-title">POINTS TABLE</h1>
+    <p class="hero-sub">League standings with NRR</p>
+  </div>
+</div>
+
+<div class="st-wrap">
+
+  <!-- Top 3 leaders -->
+  <div class="leader-cards" id="leaderCards"></div>
+
+  <!-- Main table -->
+  <div class="table-section">
+    <div class="table-title">
+      STANDINGS
+      <span id="matchInfo">— matches played</span>
+    </div>
+    <div class="pts-table-wrap">
+      <table class="pts-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>TEAM</th>
+            <th>P</th>
+            <th>W</th>
+            <th>L</th>
+            <th>NR</th>
+            <th>PTS</th>
+            <th>NRR</th>
+            <th>FORM</th>
+          </tr>
+        </thead>
+        <tbody id="standingsBody"></tbody>
+      </table>
+    </div>
+    <div class="playoff-divider" id="playoffLine" style="display:none;">
+      ── TOP 4 QUALIFY FOR PLAYOFFS ──
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="fd fd-W">W</div> Win</div>
+    <div class="legend-item"><div class="fd fd-L">L</div> Loss</div>
+    <div class="legend-item"><div class="fd fd-NR">NR</div> No Result</div>
+    <div class="legend-item" style="color:var(--success);">■ Qualifies for playoffs</div>
+    <div class="legend-item">NRR = Net Run Rate</div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-logo">MPL</div>
+    <p class="footer-text">Mamana Premier League — Updated live</p>
+  </div>
+</footer>
+
+<script src="js/storage.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  function xh(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderStandings() {
+    var table   = MPL_STORAGE.getPointsTable();
+    var matches = MPL_STORAGE.getMatches();
+    var played  = matches.filter(function(m){return m.status==='completed';}).length;
+
+    document.getElementById('matchInfo').textContent = played + ' matches played';
+
+    /* ── Leader cards (top 3) ── */
+    var cardClass = ['gold', 'silver', 'bronze'];
+    var cardPos   = ['1st Place', '2nd Place', '3rd Place'];
+    var cardsHtml = '';
+    table.slice(0, 3).forEach(function (row, i) {
+      cardsHtml +=
+        '<div class="leader-card ' + cardClass[i] + '">' +
+          '<div class="lc-pos">' + cardPos[i] + '</div>' +
+          '<div class="lc-team" style="color:' + row.team.color + ';">' + xh(row.team.name) + '</div>' +
+          '<div class="lc-pts">' + row.points + '</div>' +
+          '<div class="lc-pts-label">POINTS</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;letter-spacing:1px;">' +
+            row.won + 'W / ' + row.lost + 'L' +
+          '</div>' +
+        '</div>';
+    });
+    document.getElementById('leaderCards').innerHTML = cardsHtml;
+
+    /* ── Main table ── */
+    var bodyHtml = '';
+    var totalTeams = table.length;
+
+    table.forEach(function (row, idx) {
+      var pos      = idx + 1;
+      var posClass = pos <= 3 ? 'pos-' + pos : '';
+      var qualify  = pos <= 4 && totalTeams >= 5 ? 'qualify' : '';
+
+      var nrrClass = parseFloat(row.nrr) >= 0 ? 'nrr-pos' : 'nrr-neg';
+      var nrrStr   = parseFloat(row.nrr) >= 0 ? '+' + row.nrr : row.nrr;
+
+      var formDots = row.lastFive.map(function (r) {
+        return '<div class="fd fd-' + r + '">' + r + '</div>';
+      }).join('');
+
+      bodyHtml +=
+        '<tr class="' + qualify + '">' +
+          '<td><span class="pos-num ' + posClass + '">' + pos + '</span></td>' +
+          '<td><div class="team-cell">' +
+            '<div class="team-dot-st" style="background:' + row.team.color + ';"></div>' +
+            '<span class="team-name-st">' + xh(row.team.name) + '</span>' +
+          '</div></td>' +
+          '<td>' + row.played + '</td>' +
+          '<td style="color:#00D26A;">' + row.won + '</td>' +
+          '<td style="color:var(--danger);">' + row.lost + '</td>' +
+          '<td>' + row.nr + '</td>' +
+          '<td><span class="pts-val">' + row.points + '</span></td>' +
+          '<td class="' + nrrClass + '">' + nrrStr + '</td>' +
+          '<td><div class="form-dots">' + formDots + '</div></td>' +
+        '</tr>';
+
+      // Playoff divider after position 4
+      if (pos === 4 && totalTeams > 4) {
+        bodyHtml += '<tr><td colspan="9" style="padding:0;"><div class="playoff-divider" style="display:block;">── TOP 4 QUALIFY FOR PLAYOFFS ──</div></td></tr>';
+      }
+    });
+
+    if (!bodyHtml) {
+      bodyHtml = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-dim);">No matches played yet</td></tr>';
+    }
+
+    document.getElementById('standingsBody').innerHTML = bodyHtml;
+  }
+
+  renderStandings();
+
+  // Auto refresh every 30 seconds
+  setInterval(renderStandings, 30000);
+})();
+</script>
+</body>
+</html>

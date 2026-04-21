@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">MPL — Mamana Premier League</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── Extra homepage styles ── */
+
+    /* Gradient text utility */
+    .gold-text {
+      background: linear-gradient(135deg, #fff 0%, var(--gold) 60%, var(--gold-dim) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── LIVE BANNER ── */
+    .live-banner {
+      background: linear-gradient(90deg, #7B0000 0%, #CC0000 40%, #FF1744 60%, #CC0000 80%, #7B0000 100%);
+      background-size: 200% 100%;
+      animation: bannerSlide 3s linear infinite;
+      padding: 12px 0;
+      text-align: center;
+      display: none; /* shown by JS if live match */
+    }
+    @keyframes bannerSlide {
+      0%   { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+    .live-banner-inner {
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; flex-wrap: wrap;
+    }
+    .live-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #fff; flex-shrink: 0;
+      animation: pulse 1.1s ease-in-out infinite;
+    }
+    .live-banner-text {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 13px;
+      letter-spacing: 2px; color: #fff;
+    }
+    .live-banner a {
+      color: #FFD700; font-weight: 700;
+      font-size: 12px; letter-spacing: 2px;
+      border: 1px solid rgba(255,255,255,0.4);
+      padding: 3px 12px; border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .live-banner a:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      padding: 100px 0 60px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(245,166,35,0.14) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(245,166,35,0.07) 0%, transparent 60%),
+        var(--bg-dark);
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+    }
+    .hero-inner {
+      position: relative; z-index: 2;
+      width: 100%; text-align: center;
+      padding: 0 20px;
+    }
+    .hero-tag {
+      display: inline-block;
+      padding: 7px 20px;
+      background: rgba(245,166,35,0.1);
+      border: 1px solid rgba(245,166,35,0.5);
+      border-radius: 30px;
+      color: var(--gold);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 12px;
+      letter-spacing: 3px; text-transform: uppercase;
+      margin-bottom: 20px;
+      animation: fadeInUp 0.8s ease both;
+    }
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(52px, 12vw, 130px);
+      letter-spacing: 4px; line-height: 0.9;
+      margin-bottom: 14px;
+      animation: fadeInUp 1s ease 0.2s both;
+    }
+    .hero-subtitle {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(16px, 2.5vw, 26px);
+      color: var(--text-muted); letter-spacing: 6px;
+      margin-bottom: 10px;
+      animation: fadeInUp 1s ease 0.4s both;
+    }
+    .hero-location {
+      font-size: 14px; letter-spacing: 2px;
+      color: var(--gold); font-weight: 600;
+      margin-bottom: 48px;
+      animation: fadeInUp 1s ease 0.6s both;
+    }
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      max-width: 640px; margin: 0 auto 40px;
+      animation: fadeInUp 1s ease 0.8s both;
+    }
+    .hero-stat {
+      background: rgba(15,21,32,0.8);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 22px 14px;
+      transition: all 0.3s ease;
+    }
+    .hero-stat:hover { border-color: var(--gold); box-shadow: var(--shadow-gold); transform: translateY(-4px); }
+    .hero-stat-num {
+      font-family: 'Teko', sans-serif;
+      font-size: clamp(36px, 6vw, 52px);
+      color: var(--gold); font-weight: 600; line-height: 1;
+    }
+    .hero-stat-label {
+      font-size: 10px; color: var(--text-muted);
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-top: 6px; font-weight: 600;
+    }
+    .hero-cta {
+      display: inline-flex; gap: 12px;
+      flex-wrap: wrap; justify-content: center;
+      animation: fadeInUp 1s ease 1s both;
+    }
+
+    /* ── SECTION ── */
+    .section { padding: 72px 0; }
+    .section-header { text-align: center; margin-bottom: 48px; }
+    .section-tag {
+      display: inline-block;
+      padding: 5px 16px;
+      border: 1px solid var(--gold);
+      border-radius: 20px;
+      color: var(--gold); font-size: 11px;
+      font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; margin-bottom: 14px;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(32px, 5vw, 52px);
+      letter-spacing: 3px;
+    }
+    .section-sub {
+      color: var(--text-muted); font-size: 14px;
+      letter-spacing: 1px; margin-top: 8px;
+    }
+    .section-link {
+      display: inline-flex; align-items: center;
+      gap: 6px; color: var(--gold);
+      font-weight: 700; font-size: 12px;
+      letter-spacing: 2px; text-transform: uppercase;
+      border: 1px solid rgba(245,166,35,0.3);
+      padding: 8px 18px; border-radius: 6px;
+      transition: all 0.2s; margin-top: 16px;
+    }
+    .section-link:hover { background: rgba(245,166,35,0.1); }
+
+    /* ── LIVE SCORE SECTION (homepage widget) ── */
+    .live-score-widget {
+      background: linear-gradient(135deg, rgba(204,0,0,0.1) 0%, rgba(204,0,0,0.03) 100%);
+      border: 1px solid rgba(255,71,87,0.3);
+      border-radius: 16px; padding: 24px;
+      position: relative; overflow: hidden;
+    }
+    .live-score-widget::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--danger), var(--gold));
+    }
+    .lsw-header {
+      display: flex; align-items: center;
+      gap: 10px; margin-bottom: 16px;
+    }
+    .lsw-live-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,71,87,0.15);
+      border: 1px solid rgba(255,71,87,0.4);
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 2px; color: var(--danger);
+    }
+    .lsw-matchup {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 12px;
+      flex-wrap: wrap;
+    }
+    .lsw-team { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; }
+    .lsw-score { font-family: 'Teko', sans-serif; font-size: 36px; font-weight: 700; color: var(--gold); }
+    .lsw-overs { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; }
+    .lsw-vs {
+      font-size: 11px; font-weight: 700; letter-spacing: 2px;
+      color: var(--gold); background: rgba(245,166,35,0.1);
+      border: 1px solid rgba(245,166,35,0.3);
+      padding: 4px 10px; border-radius: 4px; flex-shrink: 0;
+    }
+
+    /* ── TEAMS GRID ── */
+    .teams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+    }
+    .team-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+      transition: all 0.3s ease; cursor: pointer;
+      text-decoration: none; color: inherit; display: block;
+    }
+    .team-card:hover { transform: translateY(-6px); border-color: var(--gold); box-shadow: var(--shadow-gold); }
+    .team-card-header {
+      height: 110px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .team-card-header::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 40%, var(--bg-card) 100%);
+    }
+    .team-card-logo {
+      width: 68px; height: 68px;
+      background: rgba(0,0,0,0.4);
+      border: 3px solid rgba(255,255,255,0.25);
+      border-radius: 50%; z-index: 1;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px; color: #fff;
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+    }
+    .team-card-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .team-card-body { padding: 16px 18px; text-align: center; }
+    .team-card-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px; letter-spacing: 2px; margin-bottom: 4px;
+    }
+    .team-card-owner {
+      font-size: 11px; color: var(--text-muted);
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px;
+    }
+    .team-card-stats {
+      display: flex; justify-content: space-around;
+      padding-top: 12px; border-top: 1px solid var(--border);
+    }
+    .tc-stat-num { font-family: 'Teko', sans-serif; font-size: 22px; color: var(--gold); font-weight: 600; }
+    .tc-stat-lbl { font-size: 9px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; }
+
+    /* ── POINTS TABLE ── */
+    .pts-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+    }
+    .pts-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .pts-table th {
+      padding: 12px 16px; font-size: 10px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-dim); text-align: right;
+      background: var(--bg-elevated); white-space: nowrap;
+    }
+    .pts-table th:nth-child(-n+2) { text-align: left; }
+    .pts-table td {
+      padding: 14px 16px; border-top: 1px solid var(--border);
+      text-align: right; color: var(--text-muted); white-space: nowrap;
+    }
+    .pts-table td:nth-child(-n+2) { text-align: left; }
+    .pts-table tbody tr:hover { background: rgba(245,166,35,0.03); }
+    .pts-table tbody tr.qualify { background: rgba(0,210,106,0.04); }
+    .pos-num { font-family: 'Teko', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-dim); }
+    .pos-1 { color: var(--gold); }
+    .pos-2 { color: #9BA3AF; }
+    .pos-3 { color: #CD7F32; }
+    .team-cell { display: flex; align-items: center; gap: 10px; }
+    .team-dot  { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .team-name-pts { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1.5px; }
+    .pts-val { font-family: 'Teko', sans-serif; font-size: 20px; color: var(--gold); font-weight: 700; }
+    .nrr-pos { color: #00D26A; } .nrr-neg { color: var(--danger); }
+    .form-dots { display: flex; gap: 3px; justify-content: flex-end; }
+    .fd { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; }
+    .fd-W { background: rgba(0,210,106,0.2); color: #00D26A; border: 1px solid rgba(0,210,106,0.4); }
+    .fd-L { background: rgba(255,71,87,0.2); color: #FF4757; border: 1px solid rgba(255,71,87,0.4); }
+    .fd-NR{ background: rgba(255,165,0,0.2); color: #FFA502; border: 1px solid rgba(255,165,0,0.4); }
+
+    /* ── FIXTURES ── */
+    .fixtures-list { display: flex; flex-direction: column; gap: 10px; }
+    .fx-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 20px;
+      display: flex; align-items: center; gap: 14px;
+      transition: all 0.3s; text-decoration: none; color: inherit;
+      position: relative; overflow: hidden;
+    }
+    .fx-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+    .fx-card.upcoming::before  { background: var(--info, #3498DB); }
+    .fx-card.live::before      { background: var(--danger); }
+    .fx-card.completed::before { background: var(--success); }
+    .fx-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+    .fx-num { font-family: 'Teko', sans-serif; font-size: 22px; color: var(--text-dim); font-weight: 700; min-width: 32px; }
+    .fx-teams { flex: 1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .fx-team  { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1.5px; }
+    .fx-vs    { font-size: 9px; font-weight: 700; letter-spacing: 2px; color: var(--gold); background: rgba(245,166,35,0.1); padding: 2px 7px; border-radius: 3px; flex-shrink: 0; }
+    .fx-meta  { text-align: right; }
+    .fx-status{
+      display: inline-block; padding: 2px 9px; border-radius: 20px;
+      font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    }
+    .fx-status.upcoming  { background: rgba(52,152,219,0.15); color: #3498DB; border: 1px solid rgba(52,152,219,0.3); }
+    .fx-status.live      { background: rgba(255,71,87,0.15);  color: #FF4757; border: 1px solid rgba(255,71,87,0.3);  }
+    .fx-status.completed { background: rgba(0,210,106,0.15);  color: #00D26A; border: 1px solid rgba(0,210,106,0.3);  }
+    .fx-date { font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; margin-top: 3px; }
+    .fx-result { font-size: 11px; color: var(--gold); font-weight: 700; margin-top: 3px; }
+
+    /* ── EMPTY STATES ── */
+    .empty-box {
+      text-align: center; padding: 48px 20px;
+      background: var(--bg-card); border: 1px dashed var(--border-light);
+      border-radius: 14px; color: var(--text-dim);
+      font-size: 13px; letter-spacing: 1px; line-height: 2;
+    }
+    .empty-box .icon { font-size: 48px; opacity: 0.3; margin-bottom: 12px; }
+
+    /* ── ORANGE / PURPLE CAP STRIP ── */
+    .cap-strip {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      margin-bottom: 0;
+    }
+    .cap-card {
+      border-radius: 14px; padding: 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .cap-card.orange { background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3); }
+    .cap-card.purple { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); }
+    .cap-icon { font-size: 36px; flex-shrink: 0; }
+    .cap-lbl  { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 3px; }
+    .cap-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; }
+    .cap-stat { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; margin-top: 2px; }
+
+    /* ── FOOTER ── */
+    .footer { background: #050810; border-top: 1px solid var(--border); padding: 48px 0 24px; margin-top: 0; }
+    .footer-inner {
+      display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 32px;
+      margin-bottom: 32px;
+    }
+    .footer-brand-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--gold); letter-spacing: 3px; margin-bottom: 8px; }
+    .footer-brand-desc { color: var(--text-muted); font-size: 13px; line-height: 1.6; max-width: 300px; }
+    .footer-col h4 { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 2px; color: var(--gold); margin-bottom: 12px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a  { color: var(--text-muted); font-size: 13px; letter-spacing: 1px; transition: color 0.2s; }
+    .footer-col a:hover { color: var(--gold); }
+    .footer-bottom { padding-top: 20px; border-top: 1px solid var(--border); text-align: center; color: var(--text-dim); font-size: 12px; letter-spacing: 1px; }
+
+    /* ── PAGE HERO (inner pages) ── */
+    .page-hero {
+      padding-top: 72px; background: var(--bg-dark);
+      text-align: center; position: relative;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .hero-stats   { grid-template-columns: 1fr; max-width: 280px; }
+      .teams-grid   { grid-template-columns: 1fr 1fr; }
+      .cap-strip    { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr; gap: 24px; }
+      .fx-card      { flex-wrap: wrap; }
+      .fx-meta      { text-align: left; }
+      /* Mobile: hide L (losses) and FORM columns, keep NRR visible */
+      .pts-table th:nth-child(5),
+      .pts-table td:nth-child(5),
+      .pts-table th:nth-child(8),
+      .pts-table td:nth-child(8) { display: none; }
+      .nav-links {
+        position: fixed; top: 72px; left: 0; right: 0;
+        background: rgba(8,12,20,0.98); flex-direction: column;
+        padding: 16px; gap: 4px;
+        border-bottom: 1px solid var(--border);
+        transform: translateY(-150%); transition: transform 0.3s ease;
+        z-index: 999;
+      }
+      .nav-links.open { transform: translateY(0); }
+      .nav-toggle { display: block; }
+    }
+    @media (max-width: 480px) {
+      .teams-grid { grid-template-columns: 1fr; }
+      .hero-title { font-size: clamp(48px, 16vw, 80px); }
+      /* Extra small: also hide W column */
+      .pts-table th:nth-child(4),
+      .pts-table td:nth-child(4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════
+     LIVE BANNER (auto-shown if live match)
+═══════════════════════════════ -->
+<div class="live-banner" id="liveBanner">
+  <div class="container">
+    <div class="live-banner-inner">
+      <div class="live-dot"></div>
+      <div class="live-banner-text" id="liveBannerText">MATCH LIVE NOW!</div>
+      <a href="live.html">WATCH LIVE →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     NAVBAR
+═══════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
+      <div class="nav-logo-badge" style="width:42px;height:42px;background:linear-gradient(135deg,var(--gold),var(--gold-dim));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--bg-dark);box-shadow:var(--shadow-gold);">
+        MPL
+      </div>
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;" id="navLeagueName">MAMANA PREMIER LEAGUE</div>
+        <div style="font-size:9px;color:var(--text-muted);letter-spacing:2px;" id="navSeasonBadge">SEASON 1</div>
+      </div>
+    </a>
+
+    <button class="nav-toggle" id="navToggle">☰</button>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="teams.html">Teams</a></li>
+      <li><a href="players.html">Players</a></li>
+      <li><a href="fixtures.html">Fixtures</a></li>
+      <li><a href="live.html">🔴 Live</a></li>
+      <li><a href="standings.html">Table</a></li>
+      <li><a href="stats.html">Stats</a></li>
+      <li><a href="rules.html">Rules</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════
+     HERO
+═══════════════════════════════ -->
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-tag" id="heroTag">🏏 Season 1 • 2025</div>
+    <h1 class="hero-title gold-text" id="heroLeagueName">MPL</h1>
+    <div class="hero-subtitle" id="heroFullName">MAMANA PREMIER LEAGUE</div>
+    <div class="hero-location">🏟️ Mamana • Local Cricket At Its Best</div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num" id="statTeams">0</div>
+        <div class="hero-stat-label">Teams</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num" id="statPlayers">0</div>
+        <div class="hero-stat-label">Players</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num" id="statMatches">0</div>
+        <div class="hero-stat-label">Matches</div>
+      </div>
+    </div>
+
+    <div class="hero-cta">
+      <a href="fixtures.html" class="btn btn-primary">📅 VIEW FIXTURES</a>
+      <a href="standings.html" class="btn btn-outline">🏆 POINTS TABLE</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════
+     LIVE SCORE (only if live match)
+═══════════════════════════════ -->
+<section class="section" id="liveSection" style="display:none;padding-top:0;">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">🔴 Live Now</div>
+      <h2 class="section-title">LIVE SCORE</h2>
+    </div>
+    <div id="liveScoreWidget"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════
+     TEAMS
+═══════════════════════════════ -->
+<section class="section" style="background:rgba(15,21,32,0.5);">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">🛡️ Squads</div>
+      <h2 class="section-title">THE TEAMS</h2>
+      <p class="section-sub">Meet the <span id="teamsCountText">6</span> teams competing this season</p>
+    </div>
+    <div class="teams-grid fade-in" id="teamsGrid"></div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="teams.html" class="section-link">VIEW ALL TEAMS →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════
+     ORANGE CAP / PURPLE CAP
+═══════════════════════════════ -->
+<section class="section" id="capsSection" style="display:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">⭐ Leaders</div>
+      <h2 class="section-title">SEASON LEADERS</h2>
+    </div>
+    <div class="cap-strip fade-in" id="capStrip"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <a href="stats.html" class="section-link">FULL STATS →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════
+     POINTS TABLE
+═══════════════════════════════ -->
+<section class="section" style="background:rgba(15,21,32,0.5);">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">📊 Standings</div>
+      <h2 class="section-title">POINTS TABLE</h2>
+      <p class="section-sub" id="ptsSubText">League standings</p>
+    </div>
+    <div class="pts-wrap fade-in">
+      <table class="pts-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>TEAM</th>
+            <th>P</th>
+            <th>W</th>
+            <th>L</th>
+            <th>PTS</th>
+            <th>NRR</th>
+            <th>FORM</th>
+          </tr>
+        </thead>
+        <tbody id="ptsTableBody"></tbody>
+      </table>
+    </div>
+    <div style="text-align:center;margin-top:16px;">
+      <a href="standings.html" class="section-link">FULL STANDINGS →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════
+     RECENT & UPCOMING FIXTURES
+═══════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">📅 Schedule</div>
+      <h2 class="section-title">FIXTURES</h2>
+      <p class="section-sub">Recent results and upcoming matches</p>
+    </div>
+    <div class="fixtures-list fade-in" id="fixturesList"></div>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="fixtures.html" class="section-link">ALL FIXTURES →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════
+     FOOTER
+═══════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand-name" id="footerName">MPL</div>
+        <div class="footer-brand-desc">Mamana Premier League — Local cricket ka sabse bada platform. Pure passion, pure cricket.</div>
+      </div>
+      <div class="footer-col">
+        <h4>QUICK LINKS</h4>
+        <ul>
+          <li><a href="teams.html">Teams</a></li>
+          <li><a href="players.html">Players</a></li>
+          <li><a href="fixtures.html">Fixtures</a></li>
+          <li><a href="standings.html">Points Table</a></li>
+          <li><a href="stats.html">Stats</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>MATCH</h4>
+        <ul>
+          <li><a href="live.html">🔴 Live Score</a></li>
+          <li><a href="scorecard.html">Scorecard</a></li>
+          <li><a href="rules.html">Rules</a></li>
+          <li><a href="admin/index.html">Admin Panel</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span id="footerYear">MPL 2025</span> — Made with ❤️ for cricket
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════
+     SCRIPTS
+═══════════════════════════════ -->
+<script src="js/storage.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ── helpers ── */
+  function xh(s) {
+    if (!s) return '';
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) +
+           ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  }
+  function fmtOvers(balls) { return Math.floor(balls/6)+'.'+balls%6; }
+  function getTeam(id) { return teams.find(function(t){return t.id===id;})||null; }
+
+  /* ── Load data ── */
+  var settings = MPL_STORAGE.getSettings() || {};
+  var teams    = MPL_STORAGE.getTeams();
+  var players  = MPL_STORAGE.getPlayers();
+  var matches  = MPL_STORAGE.getMatches();
+  var season   = MPL_STORAGE.getCurrentSeason();
+
+  var leagueName  = settings.leagueName  || 'Mamana Premier League';
+  var leagueShort = settings.leagueShort || 'MPL';
+  var leagueYear  = settings.leagueYear  || new Date().getFullYear();
+
+  /* ── Update page title & meta ── */
+  document.getElementById('pageTitle').textContent     = leagueShort + ' — ' + leagueName;
+  document.getElementById('navLeagueName').textContent = leagueName.toUpperCase();
+  document.getElementById('navSeasonBadge').textContent = 'SEASON ' + season;
+  document.getElementById('heroTag').textContent       = '🏏 Season ' + season + ' • ' + leagueYear;
+  document.getElementById('heroLeagueName').textContent = leagueShort;
+  document.getElementById('heroFullName').textContent  = leagueName.toUpperCase();
+  document.getElementById('footerName').textContent    = leagueShort;
+  document.getElementById('footerYear').textContent    = leagueShort + ' ' + leagueYear;
+
+  /* ── Hero stats (animated count) ── */
+  var completed = matches.filter(function(m){return m.status==='completed';}).length;
+  animateNum('statTeams',   teams.length);
+  animateNum('statPlayers', players.length);
+  animateNum('statMatches', completed);
+
+  function animateNum(id, target) {
+    var el = document.getElementById(id); if (!el) return;
+    if (!target) { el.textContent = '0'; return; }
+    var count = 0;
+    var step  = Math.max(1, Math.ceil(target / 30));
+    (function tick() {
+      count += step;
+      if (count >= target) { el.textContent = target; }
+      else { el.textContent = count; requestAnimationFrame(tick); }
+    })();
+  }
+
+  /* ── LIVE BANNER & WIDGET ── */
+  var liveMatches = matches.filter(function(m){return m.status==='live';});
+  if (liveMatches.length > 0) {
+    var lm  = liveMatches[0];
+    var ltA = getTeam(lm.teamAId);
+    var ltB = getTeam(lm.teamBId);
+    var bannerText = (ltA?ltA.name:'?') + ' vs ' + (ltB?ltB.name:'?') + ' — MATCH LIVE!';
+    document.getElementById('liveBanner').style.display = 'block';
+    document.getElementById('liveBannerText').textContent = bannerText;
+    document.getElementById('liveSection').style.display = 'block';
+    renderLiveWidget(lm, ltA, ltB);
+  }
+
+  function renderLiveWidget(m, tA, tB) {
+    var sc = null;
+    try { sc = JSON.parse(localStorage.getItem('mpl_scoring_state')||'null'); } catch(e){}
+
+    var el = document.getElementById('liveScoreWidget');
+    var html = '<div class="live-score-widget">';
+
+    if (sc && sc.matchId === m.id) {
+      var inn = sc.currentInnings === 1 ? sc.innings1 : sc.innings2;
+      if (inn) {
+        var battingTeam = getTeam(inn.battingTeamId);
+        var crr = inn.balls > 0 ? (inn.runs/(inn.balls/6)).toFixed(2) : '0.00';
+
+        html +=
+          '<div class="lsw-header">' +
+            '<div class="lsw-live-badge"><div class="live-dot" style="width:7px;height:7px;background:var(--danger);"></div>LIVE</div>' +
+            '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:15px;letter-spacing:2px;color:var(--text-muted);">'+
+              (sc.currentInnings===1?'1ST':'2ND')+' INNINGS' +
+            '</span>' +
+          '</div>' +
+          '<div class="lsw-matchup">' +
+            '<div>' +
+              '<div class="lsw-team" style="color:'+(tA?tA.color:'#F5A623')+'">'+(tA?xh(tA.name):'?')+'</div>' +
+              (sc.currentInnings===2 && sc.innings1 ?
+                '<div style="font-size:12px;color:var(--text-muted);">'+sc.innings1.runs+'/'+sc.innings1.wickets+' ('+fmtOvers(sc.innings1.balls)+' ov)</div>'
+              :'') +
+            '</div>' +
+            '<div class="lsw-vs">VS</div>' +
+            '<div>' +
+              '<div class="lsw-team" style="color:'+(tB?tB.color:'#F5A623')+'">'+(tB?xh(tB.name):'?')+'</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="text-align:center;margin:16px 0;">' +
+            '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:12px;letter-spacing:2px;color:var(--text-muted);margin-bottom:4px;">'+
+              (battingTeam?xh(battingTeam.name):'')+' BATTING' +
+            '</div>' +
+            '<div class="lsw-score">'+inn.runs+'/'+inn.wickets+'</div>' +
+            '<div class="lsw-overs">('+fmtOvers(inn.balls)+'/'+m.overs+' Ov) &nbsp;•&nbsp; CRR: '+crr+'</div>' +
+          '</div>';
+
+        if (sc.currentInnings===2 && sc.innings1) {
+          var need = sc.innings1.runs + 1 - inn.runs;
+          var ballsLeft = m.overs*6 - inn.balls;
+          html += '<div style="background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.2);border-radius:8px;padding:10px;text-align:center;font-size:13px;letter-spacing:1px;color:var(--text-muted);">'+
+            'Need <strong style="color:var(--gold);">'+Math.max(0,need)+'</strong> off <strong style="color:var(--gold);">'+ballsLeft+'</strong> balls &nbsp;•&nbsp; Target: <strong style="color:var(--gold);">'+(sc.innings1.runs+1)+'</strong>'+
+          '</div>';
+        }
+      }
+    } else {
+      html +=
+        '<div class="lsw-header"><div class="lsw-live-badge"><div class="live-dot" style="width:7px;height:7px;background:var(--danger);"></div>LIVE</div></div>' +
+        '<div class="lsw-matchup">' +
+          '<div class="lsw-team" style="color:'+(tA?tA.color:'#F5A623')+'">'+(tA?xh(tA.name):'?')+'</div>' +
+          '<div class="lsw-vs">VS</div>' +
+          '<div class="lsw-team" style="color:'+(tB?tB.color:'#F5A623')+'">'+(tB?xh(tB.name):'?')+'</div>' +
+        '</div>' +
+        '<div style="text-align:center;margin-top:12px;font-size:13px;color:var(--text-muted);">Match '+m.overs+' overs • Scoring in progress...</div>';
+    }
+
+    html += '<div style="text-align:center;margin-top:16px;"><a href="live.html" class="btn btn-primary" style="font-size:12px;">🔴 FULL LIVE SCORE →</a></div></div>';
+    el.innerHTML = html;
+  }
+
+  /* ── TEAMS GRID ── */
+  document.getElementById('teamsCountText').textContent = teams.length;
+
+  var teamsEl = document.getElementById('teamsGrid');
+  if (teams.length === 0) {
+    teamsEl.innerHTML = '<div class="empty-box"><div class="icon">🛡️</div><p>Koi team abhi add nahi hui hai.<br>Admin panel mein teams add karo.</p></div>';
+  } else {
+    var pCounts = {};
+    players.forEach(function(p){ if(p.teamId) pCounts[p.teamId]=(pCounts[p.teamId]||0)+1; });
+
+    teamsEl.innerHTML = teams.map(function(t) {
+      var photo  = MPL_STORAGE.getPhoto(t.id);
+      var logoEl = photo
+        ? '<div class="team-card-logo"><img src="'+photo+'" alt="'+xh(t.name)+'" /></div>'
+        : '<div class="team-card-logo" style="font-size:24px;color:#fff;">'+xh(t.code)+'</div>';
+
+      return '<a href="teams.html" class="team-card">' +
+        '<div class="team-card-header" style="background:linear-gradient(135deg,'+t.color+' 0%,'+t.color+'60 100%);">' +
+          logoEl +
+        '</div>' +
+        '<div class="team-card-body">' +
+          '<div class="team-card-name">'+xh(t.name)+'</div>' +
+          '<div class="team-card-owner">Owner: '+xh(t.owner)+'</div>' +
+          '<div class="team-card-stats">' +
+            '<div><div class="tc-stat-num">'+(pCounts[t.id]||0)+'</div><div class="tc-stat-lbl">Players</div></div>' +
+            '<div><div class="tc-stat-num">'+(t.stats&&t.stats.wins||0)+'</div><div class="tc-stat-lbl">Wins</div></div>' +
+            '<div><div class="tc-stat-num">'+(t.stats&&t.stats.points||0)+'</div><div class="tc-stat-lbl">Pts</div></div>' +
+          '</div>' +
+        '</div>' +
+      '</a>';
+    }).join('');
+  }
+
+  /* ── ORANGE CAP / PURPLE CAP ── */
+  var oc = MPL_STORAGE.getOrangeCap();
+  var pc = MPL_STORAGE.getPurpleCap();
+  if (oc.length > 0 || pc.length > 0) {
+    document.getElementById('capsSection').style.display = 'block';
+    var capHtml = '';
+
+    if (oc.length > 0) {
+      var ocTop = oc[0];
+      capHtml += '<div class="cap-card orange">' +
+        '<div class="cap-icon">🟠</div>' +
+        '<div>' +
+          '<div class="cap-lbl">Orange Cap</div>' +
+          '<div class="cap-name" style="color:#F97316;">'+xh(ocTop.player.name)+'</div>' +
+          '<div class="cap-stat">'+ocTop.runs+' Runs &nbsp;|&nbsp; SR: '+ocTop.strikeRate+'</div>' +
+        '</div>' +
+      '</div>';
+    } else {
+      capHtml += '<div class="cap-card orange"><div class="cap-icon">🟠</div><div><div class="cap-lbl">Orange Cap</div><div class="cap-stat" style="margin-top:8px;">No data yet</div></div></div>';
+    }
+
+    if (pc.length > 0) {
+      var pcTop = pc[0];
+      capHtml += '<div class="cap-card purple">' +
+        '<div class="cap-icon">🟣</div>' +
+        '<div>' +
+          '<div class="cap-lbl">Purple Cap</div>' +
+          '<div class="cap-name" style="color:#8B5CF6;">'+xh(pcTop.player.name)+'</div>' +
+          '<div class="cap-stat">'+pcTop.wickets+' Wickets &nbsp;|&nbsp; Econ: '+pcTop.economy+'</div>' +
+        '</div>' +
+      '</div>';
+    } else {
+      capHtml += '<div class="cap-card purple"><div class="cap-icon">🟣</div><div><div class="cap-lbl">Purple Cap</div><div class="cap-stat" style="margin-top:8px;">No data yet</div></div></div>';
+    }
+
+    document.getElementById('capStrip').innerHTML = capHtml;
+  }
+
+  /* ── POINTS TABLE ── */
+  var table = MPL_STORAGE.getPointsTable();
+  var ptsEl = document.getElementById('ptsTableBody');
+
+  var played = matches.filter(function(m){return m.status==='completed';}).length;
+  document.getElementById('ptsSubText').textContent = played + ' matches played this season';
+
+  if (table.length === 0) {
+    ptsEl.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-dim);letter-spacing:1px;">Abhi koi match complete nahi hua hai</td></tr>';
+  } else {
+    ptsEl.innerHTML = table.map(function(row, i) {
+      var pos      = i + 1;
+      var posClass = pos <= 3 ? 'pos-'+pos : '';
+      var qualify  = pos <= 4 && table.length >= 5 ? 'qualify' : '';
+      var nrrNum   = parseFloat(row.nrr);
+      var nrrClass = nrrNum >= 0 ? 'nrr-pos' : 'nrr-neg';
+      var nrrStr   = nrrNum >= 0 ? '+'+row.nrr : row.nrr;
+
+      var formHtml = row.lastFive.map(function(r){
+        return '<div class="fd fd-'+r+'">'+r+'</div>';
+      }).join('');
+
+      return '<tr class="'+qualify+'">' +
+        '<td><span class="pos-num '+posClass+'">'+pos+'</span></td>' +
+        '<td><div class="team-cell">' +
+          '<div class="team-dot" style="background:'+row.team.color+';"></div>' +
+          '<span class="team-name-pts">'+xh(row.team.name)+'</span>' +
+        '</div></td>' +
+        '<td>'+row.played+'</td>' +
+        '<td style="color:#00D26A;">'+row.won+'</td>' +
+        '<td style="color:var(--danger);">'+row.lost+'</td>' +
+        '<td><span class="pts-val">'+row.points+'</span></td>' +
+        '<td class="'+nrrClass+'">'+nrrStr+'</td>' +
+        '<td><div class="form-dots">'+formHtml+'</div></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  /* ── FIXTURES (live first, then recent + upcoming, max 6) ── */
+  var fxEl   = document.getElementById('fixturesList');
+  var sorted = matches.slice().sort(function(a,b){
+    var order = {live:0,upcoming:1,completed:2};
+    var oa = order[a.status]!==undefined?order[a.status]:3;
+    var ob = order[b.status]!==undefined?order[b.status]:3;
+    if (oa!==ob) return oa-ob;
+    return (parseInt(b.matchNumber)||0)-(parseInt(a.matchNumber)||0);
+  });
+
+  var shown = [];
+  // Live matches
+  sorted.filter(function(m){return m.status==='live';}).forEach(function(m){shown.push(m);});
+  // Upcoming (next 2)
+  sorted.filter(function(m){return m.status==='upcoming';}).slice(0,2).forEach(function(m){shown.push(m);});
+  // Recent completed (last 3)
+  matches.filter(function(m){return m.status==='completed';})
+    .sort(function(a,b){return (parseInt(b.matchNumber)||0)-(parseInt(a.matchNumber)||0);})
+    .slice(0,3).forEach(function(m){shown.push(m);});
+
+  // Deduplicate
+  var seen = {};
+  shown = shown.filter(function(m){ if(seen[m.id]) return false; seen[m.id]=true; return true; });
+
+  if (shown.length === 0) {
+    fxEl.innerHTML = '<div class="empty-box"><div class="icon">📅</div><p>Abhi koi fixtures nahi hain.<br>Admin panel mein matches create karo.</p></div>';
+  } else {
+    fxEl.innerHTML = shown.map(function(m) {
+      var tA  = getTeam(m.teamAId);
+      var tB  = getTeam(m.teamBId);
+      var tAn = tA ? xh(tA.name) : 'TBD';
+      var tBn = tB ? xh(tB.name) : 'TBD';
+      var tAc = tA ? tA.color : '#F5A623';
+      var tBc = tB ? tB.color : '#F5A623';
+
+      var statusLabel = m.status==='live' ? '🔴 LIVE' : m.status==='upcoming' ? '🕐 UPCOMING' : '✅ DONE';
+      var link = m.status==='completed' ? 'scorecard.html?match='+m.id : (m.status==='live' ? 'live.html' : 'fixtures.html');
+
+      return '<a href="'+link+'" class="fx-card '+m.status+'">' +
+        '<div class="fx-num">#'+(m.matchNumber||'?')+'</div>' +
+        '<div class="fx-teams">' +
+          '<span class="fx-team" style="color:'+tAc+';">'+tAn+'</span>' +
+          '<span class="fx-vs">VS</span>' +
+          '<span class="fx-team" style="color:'+tBc+';">'+tBn+'</span>' +
+        '</div>' +
+        '<div class="fx-meta">' +
+          '<span class="fx-status '+m.status+'">'+statusLabel+'</span>' +
+          (m.date ? '<div class="fx-date">'+fmtDate(m.date)+'</div>' : '') +
+          (m.result ? '<div class="fx-result">'+xh(m.result)+'</div>' : '') +
+          '<div class="fx-date">'+m.overs+' Ov'+(m.venue?' • '+xh(m.venue):'')+'</div>' +
+        '</div>' +
+      '</a>';
+    }).join('');
+  }
+
+})();
+</script>
+</body>
+</html>

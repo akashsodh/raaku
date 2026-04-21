@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPL – Rules & Regulations</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .rules-container { max-width: 860px; margin: 0 auto; padding: 40px 20px 80px; }
+
+    .rules-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .rules-section::before {
+      content: '';
+      position: absolute; left:0;top:0;bottom:0;width:4px;
+      background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dim) 100%);
+    }
+
+    .rules-section h2 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rules-list { list-style: none; padding: 0; margin: 0; }
+    .rules-list li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      letter-spacing: 0.5px;
+      display: flex;
+      gap: 12px;
+    }
+    .rules-list li:last-child { border-bottom: none; padding-bottom: 0; }
+    .rules-list li::before { content: '→'; color: var(--gold); flex-shrink: 0; font-weight: 700; }
+    .rules-list li strong { color: var(--text); }
+
+    .rules-highlight {
+      background: rgba(245,166,35,0.08);
+      border: 1px solid rgba(245,166,35,0.2);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .format-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .format-chip {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 12px 14px;
+      text-align: center;
+    }
+    .format-chip-num {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .format-chip-label {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">MPL</a>
+      <button class="nav-toggle" id="navToggle">☰</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="teams.html">Teams</a></li>
+        <li><a href="players.html">Players</a></li>
+        <li><a href="fixtures.html">Fixtures</a></li>
+        <li><a href="live.html">🔴 Live</a></li>
+        <li><a href="rules.html" class="active">Rules</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page-hero" style="height:220px;">
+    <div class="hero-content" style="padding-top:80px;">
+      <h1 class="hero-title">RULES & REGULATIONS</h1>
+      <p class="hero-sub">MPL Tournament ke official rules</p>
+    </div>
+  </div>
+
+  <div class="rules-container">
+
+    <!-- Tournament Format -->
+    <div class="rules-section">
+      <h2>🏆 TOURNAMENT FORMAT</h2>
+      <div class="rules-highlight">
+        MPL mein 6 teams participate karti hain. League stage mein har team ek dusre se play karti hai, 
+        uske baad Top 4 teams playoffs mein jati hain. Final match winner tournament champion banta hai.
+      </div>
+      <div class="format-grid">
+        <div class="format-chip">
+          <div class="format-chip-num">6</div>
+          <div class="format-chip-label">Teams</div>
+        </div>
+        <div class="format-chip">
+          <div class="format-chip-num">15</div>
+          <div class="format-chip-label">League Games</div>
+        </div>
+        <div class="format-chip">
+          <div class="format-chip-num">4</div>
+          <div class="format-chip-label">Playoffs</div>
+        </div>
+        <div class="format-chip">
+          <div class="format-chip-num">2</div>
+          <div class="format-chip-label">Points/Win</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Playing Rules -->
+    <div class="rules-section">
+      <h2>🏏 PLAYING RULES</h2>
+      <ul class="rules-list">
+        <li>Har match mein <strong>overs admin set karega</strong> (5, 6, 8, 10, 15 ya 20 overs).</li>
+        <li>Har team ko minimum <strong>11 players</strong> chahiye. Agar 11 nahi hain toh available players se khelo.</li>
+        <li>Ek bowler maximum <strong>match overs ke 20%</strong> bowl kar sakta hai (e.g. 10 overs match mein max 2 overs).</li>
+        <li>Ek bowler consecutive overs bowl nahi kar sakta — <strong>end change zaroori hai</strong>.</li>
+        <li><strong>Wide ball:</strong> +1 run, extra delivery. Batsman wicket out nahi hoga (except run out).</li>
+        <li><strong>No Ball:</strong> +1 run, free hit milegi agla ball par.</li>
+        <li><strong>Leg Bye / Bye:</strong> Runs milenge lekin batsman ke stats mein count nahi honge.</li>
+        <li>Rain interruption par <strong>D/L method ya admin ka decision</strong> final hoga.</li>
+      </ul>
+    </div>
+
+    <!-- Batting Rules -->
+    <div class="rules-section">
+      <h2>🔴 BATTING RULES</h2>
+      <ul class="rules-list">
+        <li>Batsman ko <strong>1 minute</strong> mein pitch par aana hoga wicket girne ke baad.</li>
+        <li><strong>Retired hurt:</strong> Injury ki wajah se batsman baad mein continue kar sakta hai (admin decision).</li>
+        <li><strong>Obstructing the field:</strong> Batsman out declared ho sakta hai fielder ko rok ke.</li>
+        <li>Last wicket partnership allowed hai — <strong>no "last man standing" rule</strong> by default.</li>
+        <li>Toss loser ko <strong>bat ya bowl choose karne ka choice</strong> nahi hoga unless toss winner choose kare.</li>
+      </ul>
+    </div>
+
+    <!-- Points Table -->
+    <div class="rules-section">
+      <h2>📊 POINTS SYSTEM</h2>
+      <div class="rules-highlight">
+        Points table mein team ki ranking <strong>Points → NRR → Wins</strong> ke order mein decide hogi.
+        Net Run Rate (NRR) = (Total Runs Scored / Total Overs Faced) − (Total Runs Conceded / Total Overs Bowled)
+      </div>
+      <ul class="rules-list">
+        <li><strong>Win:</strong> 2 points</li>
+        <li><strong>Loss:</strong> 0 points</li>
+        <li><strong>Tie/No Result:</strong> 1 point each (admin decision)</li>
+        <li><strong>Abandoned match:</strong> Toss hone ke baad abandoned → 1 point each</li>
+      </ul>
+    </div>
+
+    <!-- Player Eligibility -->
+    <div class="rules-section">
+      <h2>👤 PLAYER ELIGIBILITY</h2>
+      <ul class="rules-list">
+        <li>Ek player sirf <strong>ek hi team</strong> ke liye khel sakta hai poore season mein.</li>
+        <li><strong>Captain</strong> team ka representative hota hai. Match mein captain hi toss ke liye jayega.</li>
+        <li>Player transfer season ke beech allowed hai only with <strong>admin approval</strong>.</li>
+        <li>Minimum age: <strong>10 years</strong>. Maximum: <strong>60 years</strong>.</li>
+        <li>Players ko admin panel mein <strong>registered hona zaroori hai</strong> match se pehle.</li>
+      </ul>
+    </div>
+
+    <!-- Code of Conduct -->
+    <div class="rules-section">
+      <h2>⚖️ CODE OF CONDUCT</h2>
+      <ul class="rules-list">
+        <li><strong>Respect umpire's decision</strong> — arguing will result in penalty runs or dismissal.</li>
+        <li>No aggressive behavior toward players, officials, or spectators.</li>
+        <li><strong>Spirit of cricket</strong> — calling back batsmen, walking when out, informing about boundaries.</li>
+        <li>Match fixing ya tanking — <strong>team banned</strong> ho sakti hai tournament se.</li>
+        <li>Disputes admin panel mein report karo — umpire ka decision final hoga on-field.</li>
+      </ul>
+    </div>
+
+    <!-- Fair Play -->
+    <div class="rules-section">
+      <h2>🌟 FAIR PLAY AWARD</h2>
+      <ul class="rules-list">
+        <li>Har match ke baad dono captains <strong>Fair Play rating</strong> denge opponent team ko (1-5 stars).</li>
+        <li>Season end par highest average Fair Play score wali team ko <strong>Fair Play Award</strong> milega.</li>
+        <li>Fair Play Award winner ko <strong>bonus 1 point</strong> milega points table mein.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-logo">MPL</div>
+      <p class="footer-text">Mamana Premier League — Yeh rules admin panel se update ho sakte hain</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

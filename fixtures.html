@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPL – Fixtures & Results</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .fixtures-container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+
+    .fixtures-tabs {
+      display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap;
+    }
+    .fix-tab {
+      padding: 10px 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+    .fix-tab.active  { background: rgba(245,166,35,0.15); border-color: var(--gold); color: var(--gold); }
+    .fix-tab:hover:not(.active) { border-color: var(--text-muted); color: var(--text); }
+
+    .fixture-group { margin-bottom: 32px; }
+
+    .fixture-group-label {
+      font-family: var(--font-display);
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .fixture-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .fixture-card.live { border-color: rgba(255,71,87,0.4); }
+    .fixture-card.live::before { content: ''; position: absolute; left:0;top:0;bottom:0;width:4px; background: var(--danger); }
+    .fixture-card.completed::before { content: ''; position: absolute; left:0;top:0;bottom:0;width:4px; background: var(--success); }
+    .fixture-card.upcoming::before { content: ''; position: absolute; left:0;top:0;bottom:0;width:4px; background: var(--info); }
+    .fixture-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+
+    .fix-match-num {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: var(--text-dim);
+      min-width: 44px;
+      text-align: center;
+    }
+
+    .fix-teams {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .fix-team {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 1.5px;
+      color: var(--text);
+    }
+
+    .fix-vs {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--gold);
+      background: rgba(245,166,35,0.1);
+      border: 1px solid rgba(245,166,35,0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .fix-meta {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .fix-status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .fix-status.live      { background: rgba(255,71,87,0.15); color: #ff4757; border: 1px solid rgba(255,71,87,0.4); }
+    .fix-status.upcoming  { background: rgba(52,152,219,0.15); color: #3498db; border: 1px solid rgba(52,152,219,0.4); }
+    .fix-status.completed { background: rgba(0,210,106,0.15); color: #00d26a; border: 1px solid rgba(0,210,106,0.4); }
+
+    .fix-date { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; margin-top: 4px; }
+    .fix-overs { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
+    .fix-result { font-size: 13px; color: var(--gold); font-weight: 700; letter-spacing: 1px; margin-top: 4px; }
+
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      background: rgba(255,71,87,0.1);
+      border: 1px solid rgba(255,71,87,0.3);
+      color: #ff4757;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+    .live-dot-sm {
+      width: 7px; height: 7px; border-radius: 50%; background: #ff4757;
+      animation: pd 1.2s ease-in-out infinite;
+    }
+    @keyframes pd { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+    @media (max-width: 600px) {
+      .fixture-card { flex-wrap: wrap; gap: 12px; }
+      .fix-meta { text-align: left; }
+      .fix-teams { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV (copy from your main nav) -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">MPL</a>
+      <button class="nav-toggle" id="navToggle">☰</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="teams.html">Teams</a></li>
+        <li><a href="players.html">Players</a></li>
+        <li><a href="fixtures.html" class="active">Fixtures</a></li>
+        <li><a href="live.html">🔴 Live</a></li>
+        <li><a href="rules.html">Rules</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page-hero" style="height:220px;">
+    <div class="hero-content" style="padding-top:80px;">
+      <h1 class="hero-title">FIXTURES & RESULTS</h1>
+      <p class="hero-sub">Full match schedule aur results</p>
+    </div>
+  </div>
+
+  <div class="fixtures-container">
+
+    <!-- Tabs -->
+    <div class="fixtures-tabs">
+      <button class="fix-tab active" data-filter="all">All</button>
+      <button class="fix-tab" data-filter="live">🔴 Live</button>
+      <button class="fix-tab" data-filter="upcoming">Upcoming</button>
+      <button class="fix-tab" data-filter="completed">Results</button>
+    </div>
+
+    <div id="fixturesList"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-logo">MPL</div>
+      <p class="footer-text">Mamana Premier League</p>
+    </div>
+  </footer>
+
+  <script src="js/storage.js"></script>
+<script src="js/main.js"></script>
+  <script>
+    let activeFilter = 'all';
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-IN', { weekday:'short', day:'2-digit', month:'short' }) +
+             ' ' + d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+    }
+
+    function renderFixtures() {
+      const teams   = MPL_STORAGE.getTeams();
+      const matches = MPL_STORAGE.getMatches();
+      const list    = document.getElementById('fixturesList');
+
+      let filtered = matches;
+      if (activeFilter !== 'all') filtered = matches.filter(m => m.status === activeFilter);
+
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div style="text-align:center;padding:60px 20px;color:var(--text-dim);">
+            <div style="font-size:48px;margin-bottom:12px;">📅</div>
+            <h3 style="font-family:var(--font-display);font-size:22px;letter-spacing:2px;margin-bottom:8px;">NO MATCHES</h3>
+            <p>Abhi koi ${activeFilter === 'all' ? '' : activeFilter} match nahi hai.</p>
+          </div>`;
+        return;
+      }
+
+      // Sort: live first, then by date
+      filtered.sort((a, b) => {
+        const o = { live:0, upcoming:1, completed:2 };
+        if (o[a.status] !== o[b.status]) return o[a.status] - o[b.status];
+        return (a.date || 'zzz') < (b.date || 'zzz') ? -1 : 1;
+      });
+
+      list.innerHTML = filtered.map(m => {
+        const tA = teams.find(t => t.id === m.teamAId);
+        const tB = teams.find(t => t.id === m.teamBId);
+        const tAn = tA ? tA.name : 'TBD';
+        const tBn = tB ? tB.name : 'TBD';
+        const tAc = tA ? tA.color : '#F5A623';
+        const tBc = tB ? tB.color : '#F5A623';
+
+        const statusEl = m.status === 'live'
+          ? `<div class="live-badge"><div class="live-dot-sm"></div>LIVE NOW</div>`
+          : `<div class="fix-status ${m.status}">${m.status === 'upcoming' ? '🕐 UPCOMING' : '✅ COMPLETED'}</div>`;
+
+        return `
+          <div class="fixture-card ${m.status}">
+            <div class="fix-match-num">#${m.matchNumber || '?'}</div>
+            <div class="fix-teams">
+              <span class="fix-team" style="color:${tAc};">${tAn}</span>
+              <span class="fix-vs">VS</span>
+              <span class="fix-team" style="color:${tBc};">${tBn}</span>
+            </div>
+            <div class="fix-meta">
+              ${statusEl}
+              <div class="fix-date">${formatDate(m.date)}</div>
+              <div class="fix-overs">${m.overs} OVERS${m.venue ? ' • ' + m.venue : ''}</div>
+              ${m.result ? `<div class="fix-result">🏆 ${m.result}</div>` : ''}
+              ${m.status === 'live' ? `<a href="live.html" class="btn-sm" style="display:inline-block;margin-top:8px;padding:6px 14px;background:rgba(255,71,87,0.15);border:1px solid rgba(255,71,87,0.4);border-radius:6px;color:#ff4757;font-size:11px;font-weight:700;letter-spacing:2px;text-decoration:none;">WATCH LIVE →</a>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    document.querySelectorAll('.fix-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.fix-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        renderFixtures();
+      });
+    });
+
+    renderFixtures();
+  </script>
+</body>
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPL – Stats & Records</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .stats-wrap { max-width: 900px; margin: 0 auto; padding: 28px 16px 60px; }
+
+    /* Tabs */
+    .stats-tabs {
+      display: flex; gap: 6px; margin-bottom: 24px;
+      overflow-x: auto; scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .stats-tabs::-webkit-scrollbar { display: none; }
+    .stab {
+      flex-shrink: 0; padding: 10px 18px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text-muted);
+      font-family: var(--font-body); font-weight: 700;
+      font-size: 12px; letter-spacing: 1.5px;
+      cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .stab.active { background: rgba(245,166,35,0.15); border-color: var(--gold); color: var(--gold); }
+    .stab:hover:not(.active) { border-color: var(--border-light); color: var(--text); }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Orange / Purple Cap Hero ── */
+    .cap-hero {
+      border-radius: 16px; padding: 24px;
+      margin-bottom: 20px; position: relative; overflow: hidden;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .cap-hero.orange {
+      background: linear-gradient(135deg, rgba(249,115,22,0.15) 0%, rgba(249,115,22,0.05) 100%);
+      border: 1px solid rgba(249,115,22,0.4);
+    }
+    .cap-hero.purple {
+      background: linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.05) 100%);
+      border: 1px solid rgba(139,92,246,0.4);
+    }
+    .cap-icon { font-size: 56px; flex-shrink: 0; }
+    .cap-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
+    .cap-name  { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; }
+    .cap-stat  { font-size: 14px; opacity: 0.8; letter-spacing: 1px; margin-top: 4px; }
+    .cap-team  { font-size: 12px; opacity: 0.6; letter-spacing: 1px; margin-top: 2px; }
+
+    /* Leaderboard table */
+    .lb-table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .lb-title {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      font-family: var(--font-display); font-size: 16px;
+      letter-spacing: 2px;
+    }
+    .lb-table { width: 100%; border-collapse: collapse; font-size: 13px; overflow-x: auto; }
+    .lb-table th {
+      padding: 10px 14px; font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--text-dim); text-align: right;
+      background: var(--bg-elevated); white-space: nowrap;
+    }
+    .lb-table th:nth-child(-n+2) { text-align: left; }
+    .lb-table td {
+      padding: 11px 14px; border-top: 1px solid var(--border);
+      text-align: right; color: var(--text-muted); white-space: nowrap;
+    }
+    .lb-table td:nth-child(-n+2) { text-align: left; }
+    .lb-table tr:hover { background: rgba(255,255,255,0.02); }
+    .lb-rank { font-family: 'Teko',sans-serif; font-size: 20px; color: var(--text-dim); font-weight: 700; }
+    .lb-rank.r1 { color: #F59E0B; }
+    .lb-rank.r2 { color: #9BA3AF; }
+    .lb-rank.r3 { color: #CD7F32; }
+    .player-cell { display: flex; align-items: center; gap: 8px; }
+    .p-avatar-sm {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--bg-elevated); display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+      font-family: var(--font-display);
+    }
+    .p-name-lb { font-family: var(--font-display); font-size: 15px; letter-spacing: 1px; color: var(--text); }
+    .p-team-lb { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+    .highlight { color: var(--gold); font-weight: 700; }
+
+    /* ── Head-to-Head ── */
+    .h2h-selector {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      gap: 12px; align-items: center; margin-bottom: 24px;
+    }
+    .h2h-select-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .h2h-select-label { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+    .h2h-vs-badge {
+      text-align: center; font-family: var(--font-display); font-size: 18px;
+      color: var(--gold); letter-spacing: 3px; padding-top: 20px;
+    }
+
+    .h2h-summary {
+      display: grid; grid-template-columns: 1fr 80px 1fr;
+      gap: 0; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; margin-bottom: 20px; text-align: center;
+    }
+    .h2h-team-col { padding: 20px 16px; }
+    .h2h-center   { padding: 20px 8px; background: var(--bg-elevated); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+    .h2h-wins   { font-family: 'Teko',sans-serif; font-size: 52px; font-weight: 700; line-height: 1; }
+    .h2h-label  { font-size: 10px; letter-spacing: 1.5px; color: var(--text-dim); text-transform: uppercase; }
+    .h2h-bar-wrap { background: var(--bg-elevated); border-radius: 999px; height: 8px; overflow: hidden; margin: 0 8px 4px; }
+    .h2h-bar    { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
+    .h2h-nr     { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
+
+    .h2h-match-list { display: flex; flex-direction: column; gap: 8px; }
+    .h2h-match-row {
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+    }
+    .h2h-match-num { font-family: 'Teko',sans-serif; font-size: 15px; color: var(--text-dim); min-width: 28px; }
+    .h2h-match-result { font-size: 12px; color: var(--text-muted); flex: 1; letter-spacing: 0.5px; }
+    .h2h-match-winner { font-family: var(--font-display); font-size: 13px; }
+
+    /* ── Player Form Chart ── */
+    .form-selector {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; margin-bottom: 20px;
+      display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+    }
+    .form-select-group { flex: 1; min-width: 200px; }
+
+    .form-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+    .form-card-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .form-player-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--bg-elevated); border: 2px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 18px; color: var(--gold);
+      flex-shrink: 0; overflow: hidden;
+    }
+    .form-player-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .chart-area { padding: 20px; }
+    .chart-title { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 12px; }
+
+    /* SVG bar chart */
+    .bar-chart-wrap { width: 100%; }
+    .bar-chart-wrap svg { width: 100%; overflow: visible; }
+
+    /* Career stats grid */
+    .career-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
+      gap: 8px; padding: 16px; border-top: 1px solid var(--border);
+    }
+    .cs-box { text-align: center; background: var(--bg-elevated); border-radius: 8px; padding: 10px; }
+    .cs-num  { font-family: 'Teko',sans-serif; font-size: 24px; color: var(--gold); font-weight: 600; line-height: 1; }
+    .cs-label{ font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+    /* No data */
+    .no-data {
+      text-align: center; padding: 40px 20px;
+      font-size: 13px; color: var(--text-dim); letter-spacing: 1px;
+    }
+    .no-data .icon { font-size: 40px; margin-bottom: 10px; opacity: 0.4; }
+
+    @media (max-width: 500px) {
+      .h2h-selector { grid-template-columns: 1fr; }
+      .h2h-vs-badge { padding-top: 0; }
+      .h2h-summary  { grid-template-columns: 1fr 60px 1fr; }
+      .h2h-wins     { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo">MPL</a>
+    <button class="nav-toggle" id="navToggle">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="teams.html">Teams</a></li>
+      <li><a href="players.html">Players</a></li>
+      <li><a href="fixtures.html">Fixtures</a></li>
+      <li><a href="live.html">🔴 Live</a></li>
+      <li><a href="standings.html">Table</a></li>
+      <li><a href="stats.html" class="active">Stats</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page-hero" style="height:200px;">
+  <div class="hero-content" style="padding-top:70px;">
+    <h1 class="hero-title">STATS &amp; RECORDS</h1>
+    <p class="hero-sub">Orange Cap • Purple Cap • Head-to-Head • Player Form</p>
+  </div>
+</div>
+
+<div class="stats-wrap">
+
+  <!-- Tabs -->
+  <div class="stats-tabs">
+    <button class="stab active" data-panel="orange">🟠 Orange Cap</button>
+    <button class="stab" data-panel="purple">🟣 Purple Cap</button>
+    <button class="stab" data-panel="h2h">⚔️ Head-to-Head</button>
+    <button class="stab" data-panel="form">📈 Player Form</button>
+  </div>
+
+  <!-- Orange Cap -->
+  <div class="tab-panel active" id="panel-orange"></div>
+
+  <!-- Purple Cap -->
+  <div class="tab-panel" id="panel-purple"></div>
+
+  <!-- Head-to-Head -->
+  <div class="tab-panel" id="panel-h2h">
+    <div class="h2h-selector">
+      <div class="h2h-select-wrap">
+        <div class="h2h-select-label">Team A</div>
+        <select id="h2hTeamA" class="filter-select" style="width:100%;padding:12px;"></select>
+      </div>
+      <div class="h2h-vs-badge">VS</div>
+      <div class="h2h-select-wrap">
+        <div class="h2h-select-label">Team B</div>
+        <select id="h2hTeamB" class="filter-select" style="width:100%;padding:12px;"></select>
+      </div>
+    </div>
+    <div id="h2hResult"></div>
+  </div>
+
+  <!-- Player Form -->
+  <div class="tab-panel" id="panel-form">
+    <div class="form-selector">
+      <div class="form-select-group">
+        <label style="font-size:10px;letter-spacing:2px;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;">Select Player</label>
+        <select id="formPlayer" class="filter-select" style="width:100%;padding:12px;"></select>
+      </div>
+      <button class="btn btn-primary" id="viewFormBtn" style="padding:12px 20px;flex-shrink:0;">VIEW FORM</button>
+    </div>
+    <div id="formResult"></div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-logo">MPL</div>
+    <p class="footer-text">Mamana Premier League</p>
+  </div>
+</footer>
+
+<script src="js/storage.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  function xh(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function teamOf(pid) {
+    var p = MPL_STORAGE.getPlayers().find(function(x){return x.id===pid;});
+    if (!p || !p.teamId) return '—';
+    var t = MPL_STORAGE.getTeams().find(function(x){return x.id===p.teamId;});
+    return t ? xh(t.name) : '—';
+  }
+  function teamColor(tid) {
+    var t = MPL_STORAGE.getTeams().find(function(x){return x.id===tid;});
+    return t ? t.color : '#F5A623';
+  }
+  function initials(name) {
+    return name.split(/\s+/).map(function(w){return w.charAt(0);}).join('').toUpperCase().substring(0,2);
+  }
+  function photoOrInitials(pid, name, color) {
+    var photo = MPL_STORAGE.getPhoto(pid);
+    if (photo) return '<img src="'+photo+'" alt="'+xh(name)+'" />';
+    return '<span style="color:'+color+';">'+initials(name)+'</span>';
+  }
+
+  /* ─── ORANGE CAP ─────────────────────────── */
+  function renderOrangeCap() {
+    var data = MPL_STORAGE.getOrangeCap();
+    var el   = document.getElementById('panel-orange');
+
+    if (!data.length) {
+      el.innerHTML = '<div class="no-data"><div class="icon">🟠</div><p>Abhi koi batting data nahi hai</p></div>';
+      return;
+    }
+
+    var top = data[0];
+    var pTop = top.player;
+    var teamCol = pTop.teamId ? teamColor(pTop.teamId) : '#F5A623';
+    var photo   = MPL_STORAGE.getPhoto(pTop.id);
+
+    var heroHtml =
+      '<div class="cap-hero orange">' +
+        '<div class="cap-icon">' + (photo ? '<img src="'+photo+'" style="width:60px;height:60px;border-radius:50%;object-fit:cover;" />' : '🟠') + '</div>' +
+        '<div>' +
+          '<div class="cap-label">Orange Cap Holder</div>' +
+          '<div class="cap-name" style="color:#F97316;">' + xh(pTop.name) + '</div>' +
+          '<div class="cap-stat">' + top.runs + ' Runs &nbsp;|&nbsp; SR: ' + top.strikeRate + '</div>' +
+          '<div class="cap-team">' + teamOf(pTop.id) + '</div>' +
+        '</div>' +
+      '</div>';
+
+    var rows = '';
+    data.forEach(function (d, i) {
+      var p  = d.player;
+      var tc = p.teamId ? teamColor(p.teamId) : '#F5A623';
+      var rankCls = i < 3 ? 'r'+(i+1) : '';
+      rows +=
+        '<tr>' +
+          '<td><span class="lb-rank '+rankCls+'">'+(i+1)+'</span></td>' +
+          '<td><div class="player-cell">' +
+            '<div class="p-avatar-sm" style="border:1.5px solid '+tc+';">'+ photoOrInitials(p.id, p.name, tc) +'</div>' +
+            '<div><div class="p-name-lb">'+xh(p.name)+'</div><div class="p-team-lb">'+teamOf(p.id)+'</div></div>' +
+          '</div></td>' +
+          '<td class="highlight">' + d.runs + '</td>' +
+          '<td>' + d.innings + '</td>' +
+          '<td>' + d.highest + '</td>' +
+          '<td>' + d.strikeRate + '</td>' +
+          '<td>' + d.average + '</td>' +
+          '<td>' + d.fours + '</td>' +
+          '<td>' + d.sixes + '</td>' +
+          '<td>' + d.fifties + '</td>' +
+          '<td>' + d.hundreds + '</td>' +
+        '</tr>';
+    });
+
+    el.innerHTML = heroHtml +
+      '<div class="lb-table-wrap">' +
+        '<div class="lb-title" style="color:#F97316;">🟠 BATTING LEADERBOARD</div>' +
+        '<div style="overflow-x:auto;"><table class="lb-table">' +
+          '<thead><tr><th>#</th><th>PLAYER</th><th>RUNS</th><th>INN</th><th>HS</th><th>SR</th><th>AVG</th><th>4s</th><th>6s</th><th>50s</th><th>100s</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table></div>' +
+      '</div>';
+  }
+
+  /* ─── PURPLE CAP ─────────────────────────── */
+  function renderPurpleCap() {
+    var data = MPL_STORAGE.getPurpleCap();
+    var el   = document.getElementById('panel-purple');
+
+    if (!data.length) {
+      el.innerHTML = '<div class="no-data"><div class="icon">🟣</div><p>Abhi koi bowling data nahi hai</p></div>';
+      return;
+    }
+
+    var top = data[0];
+    var pTop = top.player;
+
+    var heroHtml =
+      '<div class="cap-hero purple">' +
+        '<div class="cap-icon">🟣</div>' +
+        '<div>' +
+          '<div class="cap-label">Purple Cap Holder</div>' +
+          '<div class="cap-name" style="color:#8B5CF6;">' + xh(pTop.name) + '</div>' +
+          '<div class="cap-stat">' + top.wickets + ' Wickets &nbsp;|&nbsp; Economy: ' + top.economy + '</div>' +
+          '<div class="cap-team">' + teamOf(pTop.id) + '</div>' +
+        '</div>' +
+      '</div>';
+
+    var rows = '';
+    data.forEach(function (d, i) {
+      var p  = d.player;
+      var tc = p.teamId ? teamColor(p.teamId) : '#8B5CF6';
+      var rankCls = i < 3 ? 'r'+(i+1) : '';
+      rows +=
+        '<tr>' +
+          '<td><span class="lb-rank '+rankCls+'">'+(i+1)+'</span></td>' +
+          '<td><div class="player-cell">' +
+            '<div class="p-avatar-sm" style="border:1.5px solid '+tc+';">'+ photoOrInitials(p.id, p.name, tc) +'</div>' +
+            '<div><div class="p-name-lb">'+xh(p.name)+'</div><div class="p-team-lb">'+teamOf(p.id)+'</div></div>' +
+          '</div></td>' +
+          '<td class="highlight">' + d.wickets + '</td>' +
+          '<td>' + d.overs + '</td>' +
+          '<td>' + d.runs + '</td>' +
+          '<td>' + d.economy + '</td>' +
+          '<td>' + d.average + '</td>' +
+          '<td>' + d.best + '</td>' +
+          '<td>' + (d.fiveWickets||0) + '</td>' +
+        '</tr>';
+    });
+
+    el.innerHTML = heroHtml +
+      '<div class="lb-table-wrap">' +
+        '<div class="lb-title" style="color:#8B5CF6;">🟣 BOWLING LEADERBOARD</div>' +
+        '<div style="overflow-x:auto;"><table class="lb-table">' +
+          '<thead><tr><th>#</th><th>PLAYER</th><th>WKTS</th><th>OV</th><th>RUNS</th><th>ECON</th><th>AVG</th><th>BEST</th><th>5W</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table></div>' +
+      '</div>';
+  }
+
+  /* ─── HEAD-TO-HEAD ───────────────────────── */
+  function fillH2HDropdowns() {
+    var teams = MPL_STORAGE.getTeams();
+    var opts  = teams.map(function(t){
+      return '<option value="'+t.id+'">'+xh(t.name)+'</option>';
+    }).join('');
+    document.getElementById('h2hTeamA').innerHTML = opts;
+    document.getElementById('h2hTeamB').innerHTML = opts;
+    if (teams.length >= 2) {
+      document.getElementById('h2hTeamB').selectedIndex = 1;
+    }
+    renderH2H();
+  }
+
+  function renderH2H() {
+    var idA = document.getElementById('h2hTeamA').value;
+    var idB = document.getElementById('h2hTeamB').value;
+    var el  = document.getElementById('h2hResult');
+
+    if (!idA || !idB || idA === idB) {
+      el.innerHTML = '<div class="no-data"><p>Dono alag teams select karo</p></div>';
+      return;
+    }
+
+    var tA = MPL_STORAGE.getTeams().find(function(t){return t.id===idA;});
+    var tB = MPL_STORAGE.getTeams().find(function(t){return t.id===idB;});
+    var h2h = MPL_STORAGE.getHeadToHead(idA, idB);
+
+    if (h2h.matches.length === 0) {
+      el.innerHTML = '<div class="no-data"><div class="icon">⚔️</div><p>Ye do teams abhi tak ek doosre ke khilaf nahi kheli</p></div>';
+      return;
+    }
+
+    var total   = h2h.winsA + h2h.winsB + h2h.nr;
+    var pctA    = total > 0 ? ((h2h.winsA / total) * 100).toFixed(0) : 50;
+    var pctB    = total > 0 ? ((h2h.winsB / total) * 100).toFixed(0) : 50;
+
+    var summaryHtml =
+      '<div class="h2h-summary">' +
+        '<div class="h2h-team-col">' +
+          '<div style="font-family:var(--font-display);font-size:18px;letter-spacing:1.5px;color:'+tA.color+';">' + xh(tA.name) + '</div>' +
+          '<div class="h2h-wins" style="color:'+tA.color+';">' + h2h.winsA + '</div>' +
+          '<div class="h2h-label">WINS</div>' +
+        '</div>' +
+        '<div class="h2h-center">' +
+          '<div style="font-size:10px;letter-spacing:2px;color:var(--text-dim);">PLAYED</div>' +
+          '<div style="font-family:var(--font-display);font-size:28px;color:var(--text);">' + total + '</div>' +
+          '<div class="h2h-nr">' + h2h.nr + ' NR</div>' +
+        '</div>' +
+        '<div class="h2h-team-col">' +
+          '<div style="font-family:var(--font-display);font-size:18px;letter-spacing:1.5px;color:'+tB.color+';">' + xh(tB.name) + '</div>' +
+          '<div class="h2h-wins" style="color:'+tB.color+';">' + h2h.winsB + '</div>' +
+          '<div class="h2h-label">WINS</div>' +
+        '</div>' +
+      '</div>' +
+      // Win % bar
+      '<div class="h2h-bar-wrap" style="height:10px;border-radius:999px;background:var(--bg-elevated);margin:0 0 16px;display:flex;overflow:hidden;">' +
+        '<div style="width:'+pctA+'%;background:'+tA.color+';"></div>' +
+        '<div style="flex:1;background:'+tB.color+';"></div>' +
+      '</div>';
+
+    // Match-by-match list
+    var listHtml = '<div class="h2h-match-list">';
+    h2h.matches.slice().reverse().forEach(function (m) {
+      var winner = m.winnerId ? MPL_STORAGE.getTeams().find(function(t){return t.id===m.winnerId;}) : null;
+      var wColor = winner ? winner.color : 'var(--text-dim)';
+      listHtml +=
+        '<div class="h2h-match-row">' +
+          '<span class="h2h-match-num">#' + (m.matchNumber||'?') + '</span>' +
+          '<span class="h2h-match-result">' + (m.result ? xh(m.result) : 'No Result') + '</span>' +
+          (winner ? '<span class="h2h-match-winner" style="color:'+wColor+';">'+xh(winner.name)+'</span>' : '') +
+        '</div>';
+    });
+    listHtml += '</div>';
+
+    el.innerHTML = summaryHtml + listHtml;
+  }
+
+  /* ─── PLAYER FORM CHART ──────────────────── */
+  function fillFormDropdown() {
+    var players = MPL_STORAGE.getPlayers();
+    var opts = '<option value="">— Select Player —</option>';
+    players.forEach(function(p){
+      opts += '<option value="'+p.id+'">'+xh(p.name)+'</option>';
+    });
+    document.getElementById('formPlayer').innerHTML = opts;
+  }
+
+  function renderFormChart() {
+    var pid = document.getElementById('formPlayer').value;
+    var el  = document.getElementById('formResult');
+    if (!pid) { el.innerHTML = '<div class="no-data"><p>Player select karo</p></div>'; return; }
+
+    var player  = MPL_STORAGE.getPlayers().find(function(p){return p.id===pid;});
+    if (!player) return;
+
+    var form     = MPL_STORAGE.getPlayerForm(pid);
+    var b        = player.stats && player.stats.batting  ? player.stats.batting  : {};
+    var bw       = player.stats && player.stats.bowling  ? player.stats.bowling  : {};
+    var tc       = player.teamId ? teamColor(player.teamId) : '#F5A623';
+    var photo    = MPL_STORAGE.getPhoto(pid);
+    var initls   = initials(player.name);
+
+    // Header
+    var headerHtml =
+      '<div class="form-card">' +
+      '<div class="form-card-header">' +
+        '<div class="form-player-avatar" style="border-color:'+tc+';">' +
+          (photo ? '<img src="'+photo+'" />' : '<span style="color:'+tc+';">'+initls+'</span>') +
+        '</div>' +
+        '<div>' +
+          '<div style="font-family:var(--font-display);font-size:20px;letter-spacing:2px;">'+xh(player.name)+'</div>' +
+          '<div style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-top:2px;">'+teamOf(pid)+' • '+player.role+'</div>' +
+        '</div>' +
+      '</div>';
+
+    // Chart area
+    if (form.length === 0) {
+      headerHtml += '<div class="chart-area"><div class="no-data" style="padding:20px;"><p>Is player ka koi form data nahi hai abhi</p></div></div>';
+    } else {
+      var maxRuns = Math.max.apply(null, form.map(function(f){return f.runs||0;}));
+      maxRuns = Math.max(maxRuns, 30); // min scale
+
+      var barW   = 40;
+      var barGap = 20;
+      var chartH = 120;
+      var svgW   = form.length * (barW + barGap);
+
+      var bars = '';
+      var labels = '';
+      var values = '';
+
+      form.forEach(function (f, i) {
+        var x    = i * (barW + barGap);
+        var h    = Math.max(4, Math.round((f.runs / maxRuns) * chartH));
+        var y    = chartH - h;
+        var col  = f.runs >= 50 ? '#F59E0B' : f.runs >= 25 ? '#3498DB' : '#64748B';
+
+        bars   += '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+h+'" rx="4" fill="'+col+'" opacity="0.85" />';
+        values += '<text x="'+(x+barW/2)+'" y="'+(y-4)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+col+'">'+f.runs+'</text>';
+        labels += '<text x="'+(x+barW/2)+'" y="'+(chartH+16)+'" text-anchor="middle" font-size="10" fill="#64748B">M'+xh(f.matchNum||String(i+1))+'</text>';
+        // Wickets dots
+        if (f.wickets > 0) {
+          bars += '<circle cx="'+(x+barW/2)+'" cy="'+(y-16)+'" r="8" fill="#8B5CF6" opacity="0.9" />';
+          bars += '<text x="'+(x+barW/2)+'" y="'+(y-12)+'" text-anchor="middle" font-size="9" font-weight="700" fill="white">'+f.wickets+'W</text>';
+        }
+      });
+
+      headerHtml +=
+        '<div class="chart-area">' +
+          '<div class="chart-title">LAST ' + form.length + ' MATCHES — RUNS (bars) · WICKETS (●)</div>' +
+          '<div class="bar-chart-wrap">' +
+            '<svg viewBox="0 0 '+svgW+' '+(chartH+24)+'" height="'+(chartH+24)+'" style="min-height:150px;">' +
+              bars + values + labels +
+            '</svg>' +
+          '</div>' +
+        '</div>';
+    }
+
+    // Career stats
+    headerHtml +=
+      '<div class="career-grid">' +
+        '<div class="cs-box"><div class="cs-num">'+(b.matches||0)+'</div><div class="cs-label">Matches</div></div>' +
+        '<div class="cs-box"><div class="cs-num">'+(b.runs||0)+'</div><div class="cs-label">Runs</div></div>' +
+        '<div class="cs-box"><div class="cs-num">'+(b.balls>0?((b.runs/b.balls)*100).toFixed(0):'—')+'</div><div class="cs-label">Strike Rate</div></div>' +
+        '<div class="cs-box"><div class="cs-num">'+(b.highest||0)+'</div><div class="cs-label">Highest</div></div>' +
+        '<div class="cs-box"><div class="cs-num">'+(b.fifties||0)+'</div><div class="cs-label">50s</div></div>' +
+        '<div class="cs-box"><div class="cs-num">'+(b.hundreds||0)+'</div><div class="cs-label">100s</div></div>' +
+        '<div class="cs-box"><div class="cs-num" style="color:#8B5CF6;">'+(bw.wickets||0)+'</div><div class="cs-label">Wickets</div></div>' +
+        '<div class="cs-box"><div class="cs-num">'+(bw.balls>0?(bw.runs/(bw.balls/6)).toFixed(2):'—')+'</div><div class="cs-label">Economy</div></div>' +
+        '<div class="cs-box"><div class="cs-num">'+(bw.bestFigures||'—')+'</div><div class="cs-label">Best</div></div>' +
+      '</div></div>';
+
+    el.innerHTML = headerHtml;
+  }
+
+  /* ─── TAB SWITCHING ──────────────────────── */
+  document.querySelectorAll('.stab').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.stab').forEach(function(b){b.classList.remove('active');});
+      document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+    });
+  });
+
+  /* H2H selects */
+  document.getElementById('h2hTeamA').addEventListener('change', renderH2H);
+  document.getElementById('h2hTeamB').addEventListener('change', renderH2H);
+
+  /* View Form button — needs to be accessible from button click */
+  document.getElementById('viewFormBtn').addEventListener('click', renderFormChart);
+
+  /* ─── INIT ───────────────────────────────── */
+  renderOrangeCap();
+  renderPurpleCap();
+  fillH2HDropdowns();
+  fillFormDropdown();
+
+  /* Expose globally so other inline handlers (if any) also work */
+  window.renderFormChart = renderFormChart;
+  window.renderH2H       = renderH2H;
+})();
+</script>
+</body>
+</html>

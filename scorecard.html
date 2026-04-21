@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPL – Match Scorecard</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    :root {
+      --bat-col: #3498DB;
+      --bowl-col: #E74C3C;
+    }
+    .sc-wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+
+    /* Match header */
+    .sc-header {
+      background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .sc-header::before {
+      content: ''; position: absolute; top:0; left:0; right:0; height:4px;
+      background: linear-gradient(90deg, var(--gold), var(--danger));
+    }
+    .sc-match-num {
+      font-size: 12px; letter-spacing: 3px; color: var(--text-dim);
+      text-transform: uppercase; margin-bottom: 10px;
+    }
+    .sc-matchup {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; flex-wrap: wrap; margin-bottom: 12px;
+    }
+    .sc-team { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; }
+    .sc-vs {
+      font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--gold);
+      background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.3);
+      padding: 4px 12px; border-radius: 4px;
+    }
+    .sc-result {
+      font-family: var(--font-display); font-size: 20px;
+      letter-spacing: 2px; color: var(--gold); margin-top: 8px;
+    }
+    .sc-meta {
+      font-size: 12px; color: var(--text-muted); letter-spacing: 1px; margin-top: 6px;
+    }
+
+    /* Innings scores comparison */
+    .innings-compare {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-bottom: 20px;
+    }
+    .inn-score-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; text-align: center;
+    }
+    .inn-score-card.batting { border-top: 3px solid var(--bat-col); }
+    .inn-score-card.chasing { border-top: 3px solid var(--bowl-col); }
+    .inn-team { font-size: 11px; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+    .inn-runs { font-family: var(--font-display); font-size: 42px; letter-spacing: 2px; line-height: 1; }
+    .inn-overs { font-size: 14px; color: var(--text-muted); letter-spacing: 1px; margin-top: 4px; }
+    .inn-rr { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; margin-top: 2px; }
+
+    /* POTM banner */
+    .potm-banner {
+      background: linear-gradient(135deg, rgba(245,166,35,0.12) 0%, rgba(245,166,35,0.04) 100%);
+      border: 1px solid rgba(245,166,35,0.4);
+      border-radius: 12px; padding: 16px 20px;
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .potm-trophy { font-size: 40px; flex-shrink: 0; }
+    .potm-label { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+    .potm-name { font-family: var(--font-display); font-size: 24px; letter-spacing: 2px; color: var(--gold); }
+    .potm-stat { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; }
+
+    /* Scorecard table */
+    .inn-section { margin-bottom: 20px; }
+    .inn-section-title {
+      font-family: var(--font-display); font-size: 16px; letter-spacing: 2px;
+      color: var(--text); margin-bottom: 10px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .inn-section-title span {
+      font-size: 11px; letter-spacing: 1px; color: var(--text-muted);
+      font-family: var(--font-body); font-weight: 600;
+    }
+
+    .sc-table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    .sc-table {
+      width: 100%; border-collapse: collapse;
+      background: var(--bg-card); font-size: 13px;
+    }
+    .sc-table thead th {
+      background: var(--bg-elevated);
+      padding: 10px 12px;
+      font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--text-dim);
+      text-align: right; white-space: nowrap;
+    }
+    .sc-table thead th:first-child { text-align: left; }
+    .sc-table tbody td {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      text-align: right; color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .sc-table tbody td:first-child { text-align: left; }
+    .sc-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .bat-name { font-weight: 700; color: var(--text); font-size: 14px; }
+    .bat-now  { color: var(--gold) !important; }
+    .bat-how-out { font-size: 11px; color: var(--text-dim); }
+    .num-good  { color: var(--gold); font-weight: 700; }
+    .num-great { color: #00D26A; font-weight: 700; }
+
+    /* Extras & Total rows */
+    .extras-row td, .total-row td {
+      background: var(--bg-elevated); font-weight: 700;
+    }
+    .total-row td { color: var(--text); font-size: 14px; }
+    .extras-row td { font-size: 12px; color: var(--text-muted); }
+
+    /* Fall of wickets */
+    .fow-section {
+      padding: 12px 14px;
+      background: var(--bg-elevated); border-radius: 8px;
+      margin-top: 8px; font-size: 12px; color: var(--text-muted);
+      letter-spacing: 0.5px; line-height: 1.8;
+    }
+    .fow-label { font-weight: 700; color: var(--text-dim); letter-spacing: 1.5px; margin-bottom: 4px; font-size: 10px; text-transform: uppercase; }
+
+    /* No scorecard */
+    .no-scorecard {
+      text-align: center; padding: 60px 20px;
+    }
+    .no-scorecard .icon { font-size: 64px; opacity: 0.3; margin-bottom: 16px; }
+    .no-scorecard h2 { font-family: var(--font-display); font-size: 24px; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 8px; }
+    .no-scorecard p  { color: var(--text-dim); font-size: 13px; letter-spacing: 1px; }
+
+    @media (max-width: 500px) {
+      .innings-compare { grid-template-columns: 1fr; }
+      .inn-runs { font-size: 32px; }
+      .sc-team  { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo">MPL</a>
+    <button class="nav-toggle" id="navToggle">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="teams.html">Teams</a></li>
+      <li><a href="players.html">Players</a></li>
+      <li><a href="fixtures.html" class="active">Fixtures</a></li>
+      <li><a href="live.html">🔴 Live</a></li>
+      <li><a href="standings.html">Table</a></li>
+      <li><a href="stats.html">Stats</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page-hero" style="height:180px;">
+  <div class="hero-content" style="padding-top:60px;">
+    <h1 class="hero-title" id="heroTitle">MATCH SCORECARD</h1>
+    <p class="hero-sub" id="heroSub">Full innings breakdown</p>
+  </div>
+</div>
+
+<div class="sc-wrap" id="scorecardRoot">
+  <div class="no-scorecard">
+    <div class="icon">📊</div>
+    <h2>LOADING...</h2>
+    <p>Scorecard fetch ho raha hai</p>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-logo">MPL</div>
+    <p class="footer-text">Mamana Premier League</p>
+  </div>
+</footer>
+
+<script src="js/storage.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  function fmtOvers(balls) { return Math.floor(balls/6) + '.' + (balls%6); }
+  function xh(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function teamName(id) {
+    var t = MPL_STORAGE.getTeams().find(function(x){return x.id===id;});
+    return t ? xh(t.name) : 'Unknown';
+  }
+  function teamColor(id) {
+    var t = MPL_STORAGE.getTeams().find(function(x){return x.id===id;});
+    return t ? t.color : '#F5A623';
+  }
+  function playerName(id) {
+    var p = MPL_STORAGE.getPlayers().find(function(x){return x.id===id;});
+    return p ? xh(p.name) : 'Unknown';
+  }
+
+  function buildBattingTable(inn) {
+    if (!inn) return '';
+    var rows = '';
+
+    inn.battingXI.forEach(function (pid) {
+      var s = inn.batsmen[pid];
+      if (!s) return;
+      var name     = playerName(pid);
+      var isNow    = pid === inn.striker || pid === inn.nonStriker;
+      var sr       = s.balls > 0 ? ((s.runs / s.balls)*100).toFixed(1) : '—';
+      var howOut   = '';
+      if      (s.status === 'batting' || isNow) howOut = '<span style="color:var(--gold);">batting *</span>';
+      else if (s.status === 'notOut')            howOut = 'not out';
+      else if (s.status === 'yetToBat')          howOut = '<span style="color:var(--text-dim);">yet to bat</span>';
+      else if (s.howOut === 'bowled')             howOut = 'b ' + playerName(s.bowler);
+      else if (s.howOut === 'caught')             howOut = 'c ' + (s.fielder||'fielder') + ' b ' + playerName(s.bowler);
+      else if (s.howOut === 'lbw')                howOut = 'lbw b ' + playerName(s.bowler);
+      else if (s.howOut === 'runout')             howOut = 'run out (' + (s.fielder||'—') + ')';
+      else if (s.howOut === 'stumped')            howOut = 'st ' + (s.fielder||'WK') + ' b ' + playerName(s.bowler);
+      else howOut = s.howOut || '—';
+
+      var runsClass = s.runs >= 100 ? 'num-great' : s.runs >= 50 ? 'num-good' : '';
+      rows +=
+        '<tr>'  +
+        '<td><div class="bat-name '+(isNow?'bat-now':'')+'">' + name + '</div>' +
+             '<div class="bat-how-out">' + howOut + '</div></td>' +
+        '<td class="' + runsClass + '">' + s.runs + '</td>' +
+        '<td>' + s.balls + '</td>' +
+        '<td>' + (s.fours||0) + '</td>' +
+        '<td>' + (s.sixes||0) + '</td>' +
+        '<td>' + sr + '</td>' +
+        '</tr>';
+    });
+
+    // Extras
+    var ex = inn.extras || {};
+    var totalEx = (ex.wides||0) + (ex.noBalls||0) + (ex.legByes||0) + (ex.byes||0);
+    rows += '<tr class="extras-row"><td colspan="2">Extras <span style="font-weight:400;font-size:11px;">(w:' + (ex.wides||0) + ' nb:' + (ex.noBalls||0) + ' lb:' + (ex.legByes||0) + ' b:' + (ex.byes||0) + ')</span></td><td colspan="4">' + totalEx + '</td></tr>';
+
+    // Total
+    rows += '<tr class="total-row"><td><strong>TOTAL</strong></td><td colspan="5"><strong>' + inn.runs + '/' + inn.wickets + '</strong> &nbsp;&nbsp; (' + fmtOvers(inn.balls) + ' Ov)</td></tr>';
+
+    return '<div class="sc-table-wrap"><table class="sc-table">' +
+      '<thead><tr><th>BATSMAN</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+  }
+
+  function buildBowlingTable(inn) {
+    if (!inn) return '';
+    var rows = '';
+    inn.bowlingXI.forEach(function (pid) {
+      var b = inn.bowlers[pid];
+      if (!b || b.balls === 0) return;
+      var econ = b.balls > 0 ? (b.runs / (b.balls/6)).toFixed(2) : '—';
+      var econClass = parseFloat(econ) < 6 ? 'num-great' : parseFloat(econ) < 8 ? 'num-good' : '';
+      rows +=
+        '<tr>' +
+        '<td class="bat-name">' + playerName(pid) + '</td>' +
+        '<td>' + fmtOvers(b.balls) + '</td>' +
+        '<td>' + (b.wides||0) + '</td>' +
+        '<td>' + b.runs + '</td>' +
+        '<td class="num-good">' + b.wickets + '</td>' +
+        '<td class="' + econClass + '">' + econ + '</td>' +
+        '</tr>';
+    });
+    if (!rows) return '';
+    return '<div class="sc-table-wrap" style="margin-top:10px;"><table class="sc-table">' +
+      '<thead><tr><th>BOWLER</th><th>O</th><th>Wd</th><th>R</th><th>W</th><th>ECON</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+  }
+
+  function buildFOW(inn) {
+    if (!inn || !inn.fow || inn.fow.length === 0) return '';
+    var fowText = inn.fow.map(function (f) {
+      return f.runs + '-' + f.wicket + ' (' + playerName(f.playerId) + ', ' + fmtOvers(f.balls) + ')';
+    }).join(' &nbsp;|&nbsp; ');
+    return '<div class="fow-section"><div class="fow-label">Fall of Wickets</div>' + fowText + '</div>';
+  }
+
+  function render(matchId) {
+    var root  = document.getElementById('scorecardRoot');
+    var match = MPL_STORAGE.getMatches().find(function (m) { return m.id === matchId; });
+
+    if (!match) {
+      root.innerHTML = '<div class="no-scorecard"><div class="icon">❓</div><h2>MATCH NOT FOUND</h2><p>URL check karo.</p><a href="fixtures.html" style="color:var(--gold);">← Back to Fixtures</a></div>';
+      return;
+    }
+
+    // Load scoring state for live matches
+    var sc = null;
+    try { sc = JSON.parse(localStorage.getItem('mpl_scoring_state') || 'null'); } catch (e) {}
+    var inn1 = match.inn1Data || (sc && sc.matchId === matchId ? sc.innings1 : null);
+    var inn2 = match.inn2Data || (sc && sc.matchId === matchId ? sc.innings2 : null);
+
+    var tAn   = teamName(match.teamAId);
+    var tBn   = teamName(match.teamBId);
+    var tAc   = teamColor(match.teamAId);
+    var tBc   = teamColor(match.teamBId);
+
+    // Update page title
+    document.title = 'MPL – ' + tAn + ' vs ' + tBn + ' Scorecard';
+    document.getElementById('heroTitle').textContent = 'MATCH #' + (match.matchNumber||'?');
+    document.getElementById('heroSub').textContent   = tAn + ' vs ' + tBn;
+
+    var html = '';
+
+    /* ── Match Header ── */
+    html += '<div class="sc-header">' +
+      '<div class="sc-match-num">MATCH #' + (match.matchNumber||'?') + (match.venue ? ' &nbsp;|&nbsp; '+xh(match.venue) : '') + '</div>' +
+      '<div class="sc-matchup">' +
+        '<span class="sc-team" style="color:'+tAc+';">'+tAn+'</span>' +
+        '<span class="sc-vs">VS</span>' +
+        '<span class="sc-team" style="color:'+tBc+';">'+tBn+'</span>' +
+      '</div>' +
+      (match.result ? '<div class="sc-result">🏆 ' + xh(match.result) + '</div>' : '') +
+      '<div class="sc-meta">' + (match.overs||'?') + ' Overs</div>' +
+      '</div>';
+
+    /* ── If no innings data ── */
+    if (!inn1 && !inn2) {
+      if (match.status === 'upcoming') {
+        root.innerHTML = html + '<div class="no-scorecard"><div class="icon">📅</div><h2>MATCH NOT PLAYED YET</h2><p>Match abhi upcoming hai.</p></div>';
+        return;
+      }
+      root.innerHTML = html + '<div class="no-scorecard"><div class="icon">📊</div><h2>SCORECARD NOT AVAILABLE</h2><p>Match manually scored tha — detailed scorecard nahi hai.</p><p style="margin-top:8px;">' + (match.result ? xh(match.result) : '') + '</p></div>';
+      return;
+    }
+
+    /* ── Innings comparison boxes ── */
+    html += '<div class="innings-compare">';
+    if (inn1) {
+      var rr1 = inn1.balls > 0 ? (inn1.runs / (inn1.balls/6)).toFixed(2) : '—';
+      html += '<div class="inn-score-card batting">' +
+        '<div class="inn-team">' + teamName(inn1.battingTeamId) + ' <span style="font-size:9px;color:var(--text-dim);">1ST INN</span></div>' +
+        '<div class="inn-runs" style="color:'+ teamColor(inn1.battingTeamId) +';">' + inn1.runs + '/' + inn1.wickets + '</div>' +
+        '<div class="inn-overs">(' + fmtOvers(inn1.balls) + ' Ov)</div>' +
+        '<div class="inn-rr">RR: ' + rr1 + '</div>' +
+        '</div>';
+    }
+    if (inn2) {
+      var rr2 = inn2.balls > 0 ? (inn2.runs / (inn2.balls/6)).toFixed(2) : '—';
+      var targetMet = inn1 && inn2.runs > inn1.runs;
+      html += '<div class="inn-score-card chasing">' +
+        '<div class="inn-team">' + teamName(inn2.battingTeamId) + ' <span style="font-size:9px;color:var(--text-dim);">2ND INN</span></div>' +
+        '<div class="inn-runs" style="color:' + (targetMet?'#00D26A':teamColor(inn2.battingTeamId)) + ';">' + inn2.runs + '/' + inn2.wickets + '</div>' +
+        '<div class="inn-overs">(' + fmtOvers(inn2.balls) + ' Ov) ' + (inn1?'Target: '+(inn1.runs+1):'') + '</div>' +
+        '<div class="inn-rr">RR: ' + rr2 + '</div>' +
+        '</div>';
+    }
+    html += '</div>';
+
+    /* ── POTM ── */
+    var potmRecord = MPL_STORAGE.getPOTMRecords().find(function(r){ return r.matchId === matchId; });
+    if (potmRecord) {
+      html += '<div class="potm-banner">' +
+        '<div class="potm-trophy">🏆</div>' +
+        '<div><div class="potm-label">Player of the Match</div>' +
+        '<div class="potm-name">' + playerName(potmRecord.playerId) + '</div>' +
+        '<div class="potm-stat">' + xh(potmRecord.reason) + '</div></div>' +
+        '</div>';
+    }
+
+    /* ── Innings 1 scorecard ── */
+    if (inn1) {
+      html += '<div class="inn-section">' +
+        '<div class="inn-section-title" style="color:'+teamColor(inn1.battingTeamId)+';">' +
+          teamName(inn1.battingTeamId) + ' <span>INNINGS 1</span></div>' +
+        buildBattingTable(inn1) + buildBowlingTable(inn1) + buildFOW(inn1) +
+        '</div>';
+    }
+
+    /* ── Innings 2 scorecard ── */
+    if (inn2) {
+      html += '<div class="inn-section">' +
+        '<div class="inn-section-title" style="color:'+teamColor(inn2.battingTeamId)+';">' +
+          teamName(inn2.battingTeamId) + ' <span>INNINGS 2</span></div>' +
+        buildBattingTable(inn2) + buildBowlingTable(inn2) + buildFOW(inn2) +
+        '</div>';
+    }
+
+    html += '<div style="text-align:center;margin-top:24px;">' +
+      '<a href="fixtures.html" style="color:var(--gold);font-size:13px;letter-spacing:2px;font-weight:700;">← ALL FIXTURES</a>' +
+      '</div>';
+
+    root.innerHTML = html;
+  }
+
+  /* ── Init ── */
+  var params  = new URLSearchParams(window.location.search);
+  var matchId = params.get('match');
+  if (matchId) {
+    render(matchId);
+  } else {
+    // Show all completed matches as links
+    var matches = MPL_STORAGE.getMatches().filter(function(m){return m.status==='completed';});
+    if (matches.length === 0) {
+      document.getElementById('scorecardRoot').innerHTML =
+        '<div class="no-scorecard"><div class="icon">📊</div><h2>NO COMPLETED MATCHES</h2><p>Abhi koi match complete nahi hua.</p></div>';
+    } else {
+      var html2 = '<h2 style="font-family:var(--font-display);font-size:22px;letter-spacing:2px;color:var(--gold);margin-bottom:16px;">SELECT MATCH</h2>';
+      matches.forEach(function(m) {
+        var tA = MPL_STORAGE.getTeams().find(function(t){return t.id===m.teamAId;});
+        var tB = MPL_STORAGE.getTeams().find(function(t){return t.id===m.teamBId;});
+        html2 += '<a href="scorecard.html?match='+m.id+'" style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--gold)\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
+          '<span style="font-family:var(--font-display);font-size:18px;color:var(--text-dim);min-width:32px;">#' + (m.matchNumber||'?') + '</span>' +
+          '<span style="font-family:var(--font-display);font-size:18px;color:'+(tA?tA.color:'#F5A623')+'">'+(tA?xh(tA.name):'?')+'</span>' +
+          '<span style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--gold);background:rgba(245,166,35,0.1);padding:2px 8px;border-radius:4px;">VS</span>' +
+          '<span style="font-family:var(--font-display);font-size:18px;color:'+(tB?tB.color:'#F5A623')+'">'+(tB?xh(tB.name):'?')+'</span>' +
+          '<span style="margin-left:auto;font-size:11px;color:var(--text-dim);letter-spacing:1px;">' + (m.result?xh(m.result):'') + '</span>' +
+          '</a>';
+      });
+      document.getElementById('scorecardRoot').innerHTML = html2;
+    }
+  }
+})();
+</script>
+</body>
+</html>
