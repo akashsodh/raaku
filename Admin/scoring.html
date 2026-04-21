@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPL Admin - Live Scoring</title>
+  <link rel="stylesheet" href="css/admin.css" />
+  <style>
+    /* ---- Scoring Page Specific Styles ---- */
+    .scoring-layout { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Phase containers */
+    .phase { display: none; }
+    .phase.active { display: block; }
+
+    /* Scoreboard Header */
+    .scoreboard-header {
+      background: linear-gradient(135deg, #0F1520 0%, #151D2B 100%);
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 20px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .scoreboard-header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--danger) 0%, var(--gold) 100%);
+    }
+
+    .score-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .score-team-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .score-runs {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 56px;
+      line-height: 1;
+      color: var(--text);
+      letter-spacing: 2px;
+    }
+
+    .score-overs {
+      font-family: 'Teko', sans-serif;
+      font-size: 22px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-left: 8px;
+    }
+
+    .score-crr {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    .score-target-box {
+      background: rgba(245,166,35,0.1);
+      border: 1px solid rgba(245,166,35,0.3);
+      border-radius: 10px;
+      padding: 12px 18px;
+      text-align: right;
+    }
+
+    .score-target-label { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
+    .score-target-num { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--gold); }
+    .score-rrr { font-size: 12px; color: var(--warning); letter-spacing: 1px; }
+
+    /* This Over Display */
+    .this-over-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .over-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .over-balls { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ball-chip {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Teko', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0;
+      border: 2px solid var(--border-light);
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+    }
+    .ball-chip.dot    { color: var(--text-dim); }
+    .ball-chip.four   { background: rgba(52,152,219,0.2); border-color: rgba(52,152,219,0.5); color: #3498DB; }
+    .ball-chip.six    { background: rgba(245,166,35,0.2); border-color: var(--gold); color: var(--gold); }
+    .ball-chip.wicket { background: rgba(255,71,87,0.2); border-color: var(--danger); color: var(--danger); }
+    .ball-chip.wide   { background: rgba(155,89,182,0.2); border-color: #9B59B6; color: #9B59B6; }
+    .ball-chip.noball { background: rgba(255,165,0,0.2); border-color: var(--warning); color: var(--warning); }
+    .ball-chip.extra  { background: rgba(100,100,100,0.2); border-color: var(--border-light); color: var(--text-muted); }
+    .ball-chip.empty  { border-style: dashed; opacity: 0.3; }
+
+    /* Players Panel */
+    .players-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .batsman-card, .bowler-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .batsman-card.striker {
+      border-color: var(--gold);
+      background: rgba(245,166,35,0.05);
+    }
+
+    .pc-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pc-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 1.5px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pc-stats {
+      font-family: 'Teko', sans-serif;
+      font-size: 20px;
+      color: var(--gold);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .pc-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    /* Bowler panel — spans full width */
+    .bowler-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* SCORING BUTTONS */
+    .scoring-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .run-btns {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .run-btn {
+      aspect-ratio: 1;
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      background: var(--bg-elevated);
+      color: var(--text);
+      font-family: 'Teko', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .run-btn:hover { transform: scale(1.05); }
+    .run-btn:active { transform: scale(0.95); }
+    .run-btn[data-runs="0"]:hover  { border-color: var(--text-muted); }
+    .run-btn[data-runs="4"] { border-color: rgba(52,152,219,0.4); color: #3498DB; }
+    .run-btn[data-runs="4"]:hover { background: rgba(52,152,219,0.15); }
+    .run-btn[data-runs="6"] { border-color: rgba(245,166,35,0.5); color: var(--gold); }
+    .run-btn[data-runs="6"]:hover { background: rgba(245,166,35,0.15); }
+
+    .extras-btns {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .extra-btn {
+      padding: 12px 6px;
+      border: 2px solid var(--border-light);
+      border-radius: 10px;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .extra-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(245,166,35,0.05); }
+    .extra-btn.wide-btn:hover  { border-color: #9B59B6; color: #9B59B6; background: rgba(155,89,182,0.05); }
+    .extra-btn.nb-btn:hover    { border-color: var(--warning); color: var(--warning); background: rgba(255,165,0,0.05); }
+
+    .wicket-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 8px;
+    }
+
+    .wicket-btn {
+      padding: 14px;
+      border: 2px solid rgba(255,71,87,0.4);
+      border-radius: 10px;
+      background: rgba(255,71,87,0.1);
+      color: var(--danger);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .wicket-btn:hover { background: rgba(255,71,87,0.2); border-color: var(--danger); }
+
+    .undo-btn {
+      padding: 14px;
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .undo-btn:hover { border-color: var(--warning); color: var(--warning); }
+
+    /* Action buttons row */
+    .scoring-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Match selection cards */
+    .match-select-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .match-select-card:hover { border-color: var(--gold); box-shadow: var(--shadow-gold); }
+
+    /* Toss / Setup form */
+    .setup-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .toss-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .toss-option {
+      padding: 16px;
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      background: var(--bg-input);
+    }
+    .toss-option.selected { border-color: var(--gold); background: rgba(245,166,35,0.1); }
+    .toss-option:hover    { border-color: var(--border-light); }
+    .toss-option-icon { font-size: 32px; margin-bottom: 6px; }
+    .toss-option-label { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; }
+
+    /* Player selection for XI */
+    .xi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 8px;
+    }
+
+    .xi-player-chip {
+      padding: 10px 12px;
+      background: var(--bg-input);
+      border: 2px solid var(--border-light);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .xi-player-chip:hover { border-color: var(--gold); }
+    .xi-player-chip.selected { border-color: var(--gold); background: rgba(245,166,35,0.1); color: var(--gold); }
+    .xi-player-chip .xi-jersey { 
+      width: 24px; height: 24px; border-radius: 50%; 
+      background: var(--gold); color: var(--bg-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; flex-shrink: 0;
+    }
+
+    /* Scorecard view */
+    .scorecard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .scorecard-table th {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+    }
+    .scorecard-table th:first-child { text-align: left; }
+    .scorecard-table td {
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+      font-weight: 500;
+    }
+    .scorecard-table td:first-child { text-align: left; font-weight: 600; }
+    .scorecard-table tr.batting-now { background: rgba(245,166,35,0.05); }
+    .scorecard-table tr.batting-now td:first-child { color: var(--gold); }
+
+    /* Live indicator */
+    .live-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulseDot 1.2s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(1.4); }
+    }
+
+    /* Innings complete banner */
+    .innings-complete-banner {
+      background: linear-gradient(135deg, rgba(0,210,106,0.1) 0%, rgba(0,210,106,0.05) 100%);
+      border: 1px solid rgba(0,210,106,0.3);
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    /* Match complete */
+    .result-banner {
+      background: linear-gradient(135deg, rgba(245,166,35,0.15) 0%, rgba(245,166,35,0.05) 100%);
+      border: 2px solid var(--gold);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .players-panel { grid-template-columns: 1fr; }
+      .run-btns { grid-template-columns: repeat(3, 1fr); }
+      .extras-btns { grid-template-columns: repeat(2, 1fr); }
+      .score-runs { font-size: 40px; }
+      .toss-options { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">MPL</div>
+        <div class="sidebar-title"><h2>MPL ADMIN</h2><p>Control Panel</p></div>
+      </div>
+      <div class="sidebar-section-label">Main Menu</div>
+      <ul class="sidebar-nav">
+        <li><a href="dashboard.html"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="teams.html"><span class="icon">🛡️</span> Teams</a></li>
+        <li><a href="players.html"><span class="icon">👥</span> Players</a></li>
+        <li><a href="matches.html"><span class="icon">🏏</span> Matches</a></li>
+      </ul>
+      <div class="sidebar-section-label">Live</div>
+      <ul class="sidebar-nav">
+        <li><a href="scoring.html" class="active"><span class="icon">🔴</span> Live Scoring</a></li>
+      </ul>
+      <div class="sidebar-section-label">Config</div>
+      <ul class="sidebar-nav">
+        <li><a href="settings.html"><span class="icon">⚙️</span> Settings</a></li>
+        <li><a href="../index.html" target="_blank"><span class="icon">🌐</span> View Website</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">🚪 LOGOUT</button>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="overlay"></div>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="mobile-toggle" id="mobileToggle">☰</button>
+          <div class="topbar-title">
+            <h1><span class="live-dot"></span>LIVE SCORING</h1>
+            <p>Ball-by-ball entry</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="user-badge">
+            <div class="user-avatar" id="userAvatar">S</div>
+            <div class="user-info"><p id="userName">Scorer</p><span>ADMIN</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scoring-layout">
+
+        <!-- ==============================
+             PHASE 1: MATCH SELECTION
+        ============================== -->
+        <div class="phase active" id="phaseSelect">
+          <div class="section-head"><h2>SELECT MATCH TO SCORE</h2></div>
+          <div id="matchSelectList">
+            <div class="empty-state">
+              <div class="big-icon">🏏</div>
+              <h3>NO LIVE/UPCOMING MATCHES</h3>
+              <p>Matches page pe jao aur match create karo ya START karo.</p>
+              <a href="matches.html" class="btn btn-primary" style="display:inline-flex;margin-top:12px;">
+                📅 GO TO MATCHES
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==============================
+             PHASE 2: TOSS & SETUP
+        ============================== -->
+        <div class="phase" id="phaseToss">
+          <div class="setup-card">
+            <div class="form-section-title" style="margin-top:0;">TOSS</div>
+            <div class="form-group">
+              <label class="form-label">Toss Kisne Jeeta?</label>
+              <select id="tossWinner" class="form-select">
+                <option value="">— Select Team —</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+              <label class="form-label">Unhone Kya Choose Kiya?</label>
+              <div class="toss-options">
+                <div class="toss-option selected" data-choice="bat" id="tossChoseBat">
+                  <div class="toss-option-icon">🏏</div>
+                  <div class="toss-option-label">BAT FIRST</div>
+                </div>
+                <div class="toss-option" data-choice="bowl" id="tossChoseBowl">
+                  <div class="toss-option-icon">🎯</div>
+                  <div class="toss-option-label">BOWL FIRST</div>
+                </div>
+              </div>
+              <input type="hidden" id="tossChoice" value="bat" />
+            </div>
+          </div>
+
+          <div class="setup-card" id="battingXICard">
+            <div class="form-section-title" style="margin-top:0;">BATTING TEAM PLAYING XI</div>
+            <p class="form-hint" style="margin-bottom:8px;">11 players select karo (ya jitne hain)</p>
+            <div class="xi-grid" id="battingXIGrid"></div>
+            <p style="margin-top:8px;font-size:12px;color:var(--text-muted);" id="battingXICount">0 selected</p>
+          </div>
+
+          <div class="setup-card" id="bowlingXICard">
+            <div class="form-section-title" style="margin-top:0;">BOWLING TEAM PLAYING XI</div>
+            <p class="form-hint" style="margin-bottom:8px;">11 players select karo</p>
+            <div class="xi-grid" id="bowlingXIGrid"></div>
+            <p style="margin-top:8px;font-size:12px;color:var(--text-muted);" id="bowlingXICount">0 selected</p>
+          </div>
+
+          <button class="btn btn-primary" id="confirmTossBtn" style="width:100%;padding:16px;">
+            ➡️ NEXT: SELECT OPENERS
+          </button>
+        </div>
+
+        <!-- ==============================
+             PHASE 3: OPENING BATSMEN & BOWLER
+        ============================== -->
+        <div class="phase" id="phaseOpeners">
+          <div class="setup-card">
+            <div class="form-section-title" style="margin-top:0;">OPENING BATSMEN</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Striker (On Strike)</label>
+                <select id="openerStriker" class="form-select">
+                  <option value="">— Select —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Non-Striker</label>
+                <select id="openerNonStriker" class="form-select">
+                  <option value="">— Select —</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="setup-card">
+            <div class="form-section-title" style="margin-top:0;">OPENING BOWLER</div>
+            <div class="form-group">
+              <label class="form-label">Opening Bowler</label>
+              <select id="openerBowler" class="form-select">
+                <option value="">— Select —</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-outline" id="backToTossBtn" style="flex:1;">← BACK</button>
+            <button class="btn btn-primary" id="startInningsBtn" style="flex:2;">🏏 START INNINGS</button>
+          </div>
+        </div>
+
+        <!-- ==============================
+             PHASE 4: LIVE SCORING
+        ============================== -->
+        <div class="phase" id="phaseLive">
+
+          <!-- Scoreboard -->
+          <div class="scoreboard-header">
+            <div class="score-main">
+              <div>
+                <div class="score-team-name" id="liveBattingTeam">TEAM A</div>
+                <div>
+                  <span class="score-runs" id="liveScore">0/0</span>
+                  <span class="score-overs" id="liveOvers">(0.0)</span>
+                </div>
+                <div class="score-crr">CRR: <span id="liveCRR">0.00</span>
+                  <span id="liveInningsLabel" style="margin-left:12px;font-size:11px;letter-spacing:2px;color:var(--gold);">1ST INNINGS</span>
+                </div>
+              </div>
+              <div id="targetBox" style="display:none;" class="score-target-box">
+                <div class="score-target-label">Target</div>
+                <div class="score-target-num" id="liveTarget">—</div>
+                <div class="score-rrr">Need <span id="liveNeed">—</span> in <span id="liveBallsLeft">—</span> balls</div>
+                <div class="score-rrr">RRR: <span id="liveRRR">—</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- This Over -->
+          <div class="this-over-bar">
+            <div class="over-label">THIS OVER</div>
+            <div class="over-balls" id="thisOverBalls">
+              <!-- rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Batsmen & Bowler -->
+          <div class="players-panel">
+            <div class="batsman-card striker" id="strikerCard">
+              <div class="pc-label">🏏 STRIKER <span style="color:var(--gold);font-size:14px;">★</span></div>
+              <div class="pc-name" id="strikerName">—</div>
+              <div class="pc-stats" id="strikerStats">0(0)</div>
+              <div class="pc-sub" id="strikerSR">SR: 0.00</div>
+            </div>
+            <div class="batsman-card" id="nonStrikerCard">
+              <div class="pc-label">🏏 NON-STRIKER</div>
+              <div class="pc-name" id="nonStrikerName">—</div>
+              <div class="pc-stats" id="nonStrikerStats">0(0)</div>
+              <div class="pc-sub" id="nonStrikerSR">SR: 0.00</div>
+            </div>
+          </div>
+
+          <div class="bowler-panel">
+            <div>
+              <div class="pc-label">🎯 BOWLER</div>
+              <div class="pc-name" id="bowlerName">—</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="pc-stats" id="bowlerStats">0-0-0-0</div>
+              <div class="pc-sub" id="bowlerEcon">Econ: 0.00</div>
+            </div>
+          </div>
+
+          <!-- Extras display -->
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);letter-spacing:1px;">
+            <span>Extras: <strong id="extraTotal" style="color:var(--text);">0</strong></span>
+            <span>Wd: <strong id="extraWd" style="color:var(--text);">0</strong></span>
+            <span>Nb: <strong id="extraNb" style="color:var(--text);">0</strong></span>
+            <span>Lb: <strong id="extraLb" style="color:var(--text);">0</strong></span>
+            <span>B: <strong id="extraB" style="color:var(--text);">0</strong></span>
+            <span>Fow: <strong id="extraFow" style="color:var(--text);">0/0</strong></span>
+          </div>
+
+          <!-- SCORING BUTTONS -->
+          <div class="scoring-section">
+            <div class="form-section-title" style="margin-top:0;">RUNS</div>
+            <div class="run-btns">
+              <button class="run-btn" data-runs="0">0</button>
+              <button class="run-btn" data-runs="1">1</button>
+              <button class="run-btn" data-runs="2">2</button>
+              <button class="run-btn" data-runs="3">3</button>
+              <button class="run-btn" data-runs="4">4</button>
+              <button class="run-btn" data-runs="6">6</button>
+            </div>
+
+            <div class="form-section-title">EXTRAS</div>
+            <div class="extras-btns">
+              <button class="extra-btn wide-btn" data-extra="wide" data-runs="0">WIDE<br><span style="font-size:10px;">+1</span></button>
+              <button class="extra-btn wide-btn" data-extra="wide" data-runs="1">WD+1</button>
+              <button class="extra-btn nb-btn" data-extra="noball" data-runs="0">NO BALL<br><span style="font-size:10px;">+1</span></button>
+              <button class="extra-btn nb-btn" data-extra="noball" data-runs="1">NB+1</button>
+            </div>
+            <div class="extras-btns">
+              <button class="extra-btn" data-extra="legbye" data-runs="1">LB 1</button>
+              <button class="extra-btn" data-extra="legbye" data-runs="2">LB 2</button>
+              <button class="extra-btn" data-extra="bye" data-runs="1">BYE 1</button>
+              <button class="extra-btn" data-extra="bye" data-runs="2">BYE 2</button>
+            </div>
+
+            <div class="form-section-title">ACTION</div>
+            <div class="wicket-btn-row">
+              <button class="wicket-btn" id="wicketBtn">⚡ W</button>
+              <button class="undo-btn" id="undoBtn">↩ UNDO LAST BALL</button>
+            </div>
+          </div>
+
+          <!-- Scoring Actions -->
+          <div class="scoring-actions">
+            <button class="btn btn-outline" id="viewScorecardBtn" style="flex:1;">📊 SCORECARD</button>
+            <button class="btn btn-outline" id="endInningsBtn" style="flex:1;">🔚 END INNINGS</button>
+          </div>
+        </div>
+
+        <!-- ==============================
+             PHASE 5: INNINGS 2 SETUP
+        ============================== -->
+        <div class="phase" id="phaseInnings2">
+          <div class="innings-complete-banner" style="margin-bottom:16px;">
+            <div style="font-size:48px;margin-bottom:8px;">✅</div>
+            <h2 style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--success);">
+              INNINGS COMPLETE!
+            </h2>
+            <div style="font-family:'Teko',sans-serif;font-size:36px;color:var(--gold);margin:8px 0;" id="inn1FinalScore">
+              0/0 (0.0 Ov)
+            </div>
+            <div style="font-size:14px;color:var(--text-muted);letter-spacing:1px;" id="targetAnnounce">
+              Target: — runs
+            </div>
+          </div>
+
+          <div class="setup-card">
+            <div class="form-section-title" style="margin-top:0;">2ND INNINGS OPENERS</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Striker</label>
+                <select id="inn2Striker" class="form-select"><option value="">— Select —</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Non-Striker</label>
+                <select id="inn2NonStriker" class="form-select"><option value="">— Select —</option></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="setup-card">
+            <div class="form-section-title" style="margin-top:0;">OPENING BOWLER (2ND INNINGS)</div>
+            <div class="form-group">
+              <select id="inn2Bowler" class="form-select"><option value="">— Select Bowler —</option></select>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="startInnings2Btn" style="width:100%;padding:16px;">
+            🏏 START 2ND INNINGS
+          </button>
+        </div>
+
+        <!-- ==============================
+             PHASE 6: MATCH COMPLETE
+        ============================== -->
+        <div class="phase" id="phaseComplete">
+          <div class="result-banner">
+            <div style="font-size:64px;margin-bottom:8px;">🏆</div>
+            <h2 style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;">
+              MATCH COMPLETE!
+            </h2>
+            <div style="font-family:'Teko',sans-serif;font-size:24px;color:var(--text);margin-bottom:6px;" id="finalResultText">—</div>
+            <div style="font-size:13px;color:var(--text-muted);letter-spacing:1px;margin-bottom:20px;" id="finalScoresText">—</div>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+              <a href="matches.html" class="btn btn-outline">📅 MATCHES</a>
+              <button class="btn btn-primary" id="newScoringBtn">🏏 SCORE ANOTHER</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ====== MODALS ====== -->
+
+  <!-- Wicket Modal -->
+  <div class="modal-overlay" id="wicketModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>⚡ WICKET!</h2>
+        <button class="modal-close" id="closeWicketModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Batsman Out</label>
+          <select id="wktBatsmanOut" class="form-select"></select>
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label class="form-label">How Out?</label>
+          <select id="wktType" class="form-select">
+            <option value="bowled">Bowled</option>
+            <option value="caught">Caught</option>
+            <option value="lbw">LBW</option>
+            <option value="runout">Run Out</option>
+            <option value="stumped">Stumped</option>
+            <option value="hitwicket">Hit Wicket</option>
+            <option value="retired">Retired Hurt</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-top:12px;" id="fielderGroup">
+          <label class="form-label">Fielder (optional)</label>
+          <input type="text" id="wktFielder" class="form-input" placeholder="e.g. Rahul Sharma" maxlength="40" />
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label class="form-label">Runs on this ball</label>
+          <select id="wktRuns" class="form-select">
+            <option value="0">0 (Dot)</option>
+            <option value="1">1 Run</option>
+            <option value="2">2 Runs</option>
+            <option value="3">3 Runs</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="cancelWicketBtn">CANCEL</button>
+        <button class="btn btn-primary" id="confirmWicketBtn">✅ CONFIRM WICKET</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Batsman Modal -->
+  <div class="modal-overlay" id="newBatsmanModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>🏏 NEW BATSMAN</h2>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-muted);font-size:13px;letter-spacing:1px;margin-bottom:12px;">
+          Wicket gira! Agla batsman select karo:
+        </p>
+        <div id="newBatsmanList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Bowler Modal -->
+  <div class="modal-overlay" id="newBowlerModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>🎯 NEXT OVER BOWLER</h2>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-muted);font-size:13px;letter-spacing:1px;margin-bottom:12px;">
+          Over complete! Agla bowler select karo:
+        </p>
+        <div id="newBowlerList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scorecard Modal -->
+  <div class="modal-overlay" id="scorecardModal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h2>📊 SCORECARD</h2>
+        <button class="modal-close" id="closeScorecardModal">✕</button>
+      </div>
+      <div class="modal-body" id="scorecardBody" style="padding:16px;"></div>
+    </div>
+  </div>
+<script src="js/sheets-api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/scoring.js"></script>
+</body>
+</html>

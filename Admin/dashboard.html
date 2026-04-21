@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPL Admin - Dashboard</title>
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">MPL</div>
+        <div class="sidebar-title">
+          <h2>MPL ADMIN</h2>
+          <p>Control Panel</p>
+        </div>
+      </div>
+
+      <div class="sidebar-section-label">Main Menu</div>
+      <ul class="sidebar-nav">
+        <li><a href="dashboard.html" class="active"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="teams.html"><span class="icon">🛡️</span> Teams</a></li>
+        <li><a href="players.html"><span class="icon">👥</span> Players</a></li>
+        <li><a href="matches.html"><span class="icon">🏏</span> Matches</a></li>
+      </ul>
+
+      <div class="sidebar-section-label">Live</div>
+      <ul class="sidebar-nav">
+        <li><a href="scoring.html"><span class="icon">🔴</span> Live Scoring</a></li>
+      </ul>
+
+      <div class="sidebar-section-label">Config</div>
+      <ul class="sidebar-nav">
+        <li><a href="settings.html"><span class="icon">⚙️</span> Settings</a></li>
+        <li><a href="../index.html" target="_blank"><span class="icon">🌐</span> View Website</a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">🚪 LOGOUT</button>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="overlay"></div>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main">
+
+      <!-- Topbar -->
+      <div class="topbar">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="mobile-toggle" id="mobileToggle">☰</button>
+          <div class="topbar-title">
+            <h1>DASHBOARD</h1>
+            <p id="welcomeText">Welcome back, Scorer</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="user-badge">
+            <div class="user-avatar" id="userAvatar">S</div>
+            <div class="user-info">
+              <p id="userName">Scorer</p>
+              <span>SEASON <span id="seasonNum">1</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-label">Total Teams</span>
+            <div class="stat-icon">🛡️</div>
+          </div>
+          <div class="stat-value" id="statTeams">0</div>
+          <div class="stat-subtext">of 6 teams</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-label">Total Players</span>
+            <div class="stat-icon">👥</div>
+          </div>
+          <div class="stat-value" id="statPlayers">0</div>
+          <div class="stat-subtext">registered</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-label">Total Matches</span>
+            <div class="stat-icon">🏏</div>
+          </div>
+          <div class="stat-value" id="statMatches">0</div>
+          <div class="stat-subtext" id="matchBreakdown">0 done • 0 upcoming</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-label">Live Now</span>
+            <div class="stat-icon">🔴</div>
+          </div>
+          <div class="stat-value" id="statLive">0</div>
+          <div class="stat-subtext success" id="liveText">No match live</div>
+        </div>
+
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section-head">
+        <h2>QUICK ACTIONS</h2>
+      </div>
+
+      <div class="actions-grid">
+
+        <a href="teams.html" class="action-card">
+          <div class="action-icon">➕</div>
+          <h3>ADD TEAM</h3>
+          <p>Register new team</p>
+        </a>
+
+        <a href="players.html" class="action-card">
+          <div class="action-icon">👤</div>
+          <h3>ADD PLAYER</h3>
+          <p>Register new player</p>
+        </a>
+
+        <a href="matches.html" class="action-card">
+          <div class="action-icon">📅</div>
+          <h3>CREATE MATCH</h3>
+          <p>Schedule new fixture</p>
+        </a>
+
+        <a href="scoring.html" class="action-card">
+          <div class="action-icon">🔴</div>
+          <h3>START SCORING</h3>
+          <p>Live ball-by-ball</p>
+        </a>
+
+      </div>
+
+      <!-- Getting Started info -->
+      <div class="section-head">
+        <h2>GETTING STARTED</h2>
+      </div>
+
+      <div id="gettingStarted" class="info-card">
+        <div class="big-icon">🏏</div>
+        <h3>WELCOME TO MPL ADMIN!</h3>
+        <p>Setup sequence: Teams → Players → Matches → Live Scoring</p>
+        <p style="margin-top:16px;">
+          <a href="teams.html" style="color:var(--gold); font-weight:700; letter-spacing:2px;">
+            👉 START BY ADDING TEAMS
+          </a>
+        </p>
+      </div>
+
+    </main>
+
+  </div>
+  <script src="js/sheets-api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/storage.js"></script>
+  <script>
+    // Protect this page
+    if (!MPL_AUTH.requireAuth()) throw new Error('Not authenticated');
+
+    // Mobile sidebar toggle
+    const sidebar   = document.getElementById('sidebar');
+    const overlay   = document.getElementById('overlay');
+    const mToggle   = document.getElementById('mobileToggle');
+
+    mToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('open');
+    });
+
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      if (confirm('Logout karna hai?')) MPL_AUTH.logout();
+    });
+
+    // Load user info
+    const user = MPL_AUTH.getUser();
+    if (user) {
+      document.getElementById('userName').textContent    = user.user;
+      document.getElementById('userAvatar').textContent  = user.user.charAt(0).toUpperCase();
+      document.getElementById('welcomeText').textContent = `Welcome back, ${user.user}!`;
+    }
+
+    // Load stats
+    function loadStats() {
+      const stats = MPL_STORAGE.getDashboardStats();
+
+      animateCount('statTeams',   stats.totalTeams);
+      animateCount('statPlayers', stats.totalPlayers);
+      animateCount('statMatches', stats.totalMatches);
+      animateCount('statLive',    stats.liveMatches);
+
+      document.getElementById('matchBreakdown').textContent =
+        `${stats.completedMatches} done • ${stats.upcomingMatches} upcoming`;
+
+      document.getElementById('liveText').textContent =
+        stats.liveMatches > 0 ? '🔴 LIVE IN PROGRESS' : 'No match live';
+
+      document.getElementById('seasonNum').textContent = stats.currentSeason;
+
+      // Hide "getting started" if data exists
+      if (stats.totalTeams > 0) {
+        document.getElementById('gettingStarted').style.display = 'none';
+      }
+    }
+
+    function animateCount(id, target) {
+      const el = document.getElementById(id);
+      if (!target) { el.textContent = '0'; return; }
+      let count = 0;
+      const step = Math.max(1, Math.ceil(target / 20));
+      const tick = () => {
+        count += step;
+        if (count >= target) {
+          el.textContent = target;
+        } else {
+          el.textContent = count;
+          requestAnimationFrame(tick);
+        }
+      };
+      tick();
+    }
+
+    loadStats();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>MPL Admin - Players</title>
+  <link rel="stylesheet" href="css/admin.css" />
+  <style>
+    /* =========================================
+       MOBILE-FIRST PLAYERS PAGE
+    ========================================= */
+
+    /* ---- Player Cards Grid ---- */
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    /* ---- Bottom Sheet Modal (mobile-first) ---- */
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: flex-end;       /* bottom on mobile */
+      justify-content: center;
+      padding: 0;
+    }
+    .sheet-overlay.show { display: flex; }
+
+    .bottom-sheet {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 92vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s cubic-bezier(0.32,0.72,0,1);
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    /* On larger screens → centered modal */
+    @media (min-width: 640px) {
+      .sheet-overlay {
+        align-items: center;
+        padding: 20px;
+      }
+      .bottom-sheet {
+        border-radius: 16px;
+        max-height: 90vh;
+      }
+    }
+
+    /* ---- Sheet Handle (mobile drag indicator) ---- */
+    .sheet-handle {
+      width: 40px; height: 4px;
+      background: var(--border-light);
+      border-radius: 2px;
+      margin: 12px auto 0;
+    }
+    @media (min-width: 640px) { .sheet-handle { display: none; } }
+
+    /* ---- Sheet Header ---- */
+    .sheet-header {
+      position: sticky;
+      top: 0;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    .sheet-header h2 {
+      font-size: 20px;
+      letter-spacing: 2px;
+      color: var(--gold);
+    }
+    .sheet-close {
+      width: 36px; height: 36px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .sheet-close:hover { background: rgba(255,71,87,0.15); color: var(--danger); border-color: var(--danger); }
+
+    /* ---- Mini Preview (compact, mobile) ---- */
+    .mini-preview {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-input) 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .mini-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+      border: 3px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px; color: var(--gold);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .mini-avatar .jersey-badge {
+      position: absolute;
+      bottom: -4px; right: -4px;
+      width: 22px; height: 22px;
+      background: var(--gold);
+      color: var(--bg-dark);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Teko', sans-serif;
+      font-weight: 700; font-size: 11px;
+      border: 2px solid var(--bg-card);
+    }
+    .mini-info h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px; letter-spacing: 1.5px;
+      color: var(--text); line-height: 1;
+      margin-bottom: 3px;
+    }
+    .mini-info p { font-size: 12px; color: var(--text-muted); letter-spacing: 0.5px; }
+
+    /* ---- Form Body ---- */
+    .sheet-body { padding: 16px 20px 8px; }
+
+    /* ---- Section Label (compact) ---- */
+    .sec-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px; letter-spacing: 2px;
+      color: var(--gold);
+      margin: 16px 0 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sec-label::after {
+      content: '';
+      flex: 1; height: 1px;
+      background: var(--border);
+    }
+    .sec-label:first-child { margin-top: 0; }
+
+    /* ---- Input Groups ---- */
+    .input-group { margin-bottom: 12px; }
+    .input-label {
+      display: block;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 1.5px; color: var(--text-muted);
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .input-field {
+      width: 100%;
+      padding: 13px 14px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-light);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px; font-weight: 500;
+      transition: all 0.2s;
+      -webkit-appearance: none;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(245,166,35,0.12);
+    }
+    .input-field::placeholder { color: var(--text-dim); }
+    .input-hint { font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* ---- Two-col row ---- */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ---- Role Selector (2x2 on mobile) ---- */
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .role-tile {
+      padding: 12px 8px;
+      background: var(--bg-input);
+      border: 2px solid var(--border-light);
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .role-tile:active { transform: scale(0.96); }
+    .role-tile.picked { border-color: var(--gold); background: rgba(245,166,35,0.1); }
+    .role-tile-icon { font-size: 26px; line-height: 1; }
+    .role-tile-name {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .role-tile.picked .role-tile-name { color: var(--gold); }
+
+    /* ---- Toggle Chips (Captain / WK) ---- */
+    .toggle-row { display: flex; gap: 8px; }
+    .toggle-chip {
+      flex: 1;
+      padding: 12px 10px;
+      background: var(--bg-input);
+      border: 2px solid var(--border-light);
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .toggle-chip:active { transform: scale(0.97); }
+    .toggle-chip.on { border-color: var(--gold); background: rgba(245,166,35,0.1); color: var(--gold); }
+    /* Hidden actual checkboxes */
+    #playerIsCaptain, #playerIsWK { display: none; }
+
+    /* ---- Sheet Footer (sticky) ---- */
+    .sheet-footer {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 14px 20px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
+      display: flex;
+      gap: 10px;
+    }
+    .sheet-footer .btn { flex: 1; padding: 14px; font-size: 13px; letter-spacing: 2px; }
+    .sheet-footer .btn-cancel {
+      flex: 0 0 auto;
+      padding: 14px 18px;
+      background: transparent;
+      border: 1.5px solid var(--border-light);
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 13px; letter-spacing: 1px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .sheet-footer .btn-cancel:hover { border-color: var(--danger); color: var(--danger); }
+    .btn-save {
+      flex: 1;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+      color: var(--bg-dark);
+      border: none;
+      border-radius: 10px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 14px; letter-spacing: 2px;
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: var(--shadow-gold);
+    }
+    .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,166,35,0.4); }
+    .btn-save:active { transform: scale(0.98); }
+
+    /* ---- No Teams Warning ---- */
+    .warning-bar {
+      background: rgba(255,165,2,0.08);
+      border: 1px solid rgba(255,165,2,0.3);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px; font-size: 13px; color: var(--warning);
+      letter-spacing: 0.5px;
+    }
+    .warning-bar a { color: var(--gold); font-weight: 700; margin-left: auto; }
+
+    /* ---- Filter bar responsive ---- */
+    .filter-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .filter-search-wrap {
+      grid-column: 1 / -1;
+      position: relative;
+    }
+    .filter-search-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted); font-size: 15px;
+      pointer-events: none;
+    }
+    .filter-search {
+      width: 100%;
+      padding: 11px 12px 11px 38px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-light);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px; font-weight: 500;
+      transition: all 0.2s;
+    }
+    .filter-search:focus { outline: none; border-color: var(--gold); }
+    .filter-select {
+      padding: 11px 10px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-light);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; width: 100%;
+      -webkit-appearance: none;
+    }
+    .filter-reset-btn {
+      grid-column: 1 / -1;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 12px; letter-spacing: 1.5px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .filter-reset-btn:active { border-color: var(--danger); color: var(--danger); }
+
+    /* ---- Team summary bar ---- */
+    .team-summary-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 14px;
+      display: flex; gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .team-summary-bar::-webkit-scrollbar { display: none; }
+    .team-chip {
+      flex-shrink: 0;
+      padding: 8px 12px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-light);
+      border-radius: 8px;
+      display: flex; align-items: center; gap: 7px;
+      cursor: pointer; transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .team-chip:active { transform: scale(0.96); }
+    .team-chip.active { border-color: var(--gold); background: rgba(245,166,35,0.1); }
+    .team-chip.all-chip { border-color: var(--gold); background: rgba(245,166,35,0.06); }
+    .chip-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .chip-code { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--text); }
+    .chip-count { font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; }
+
+    /* ---- Player card (compact mobile) ---- */
+    .player-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .player-card:hover { border-color: var(--gold); }
+    .player-card-top {
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .player-card-top::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: var(--team-color, var(--gold));
+    }
+    .p-avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-input) 100%);
+      border: 2px solid var(--team-color, var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px; color: var(--gold);
+      flex-shrink: 0; position: relative;
+    }
+    .p-jersey {
+      position: absolute; top: -3px; right: -3px;
+      width: 20px; height: 20px;
+      background: var(--gold); color: var(--bg-dark);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Teko', sans-serif;
+      font-weight: 700; font-size: 10px;
+      border: 2px solid var(--bg-card);
+    }
+    .p-info { flex: 1; min-width: 0; }
+    .p-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 17px; letter-spacing: 1.5px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+    .p-badge {
+      display: inline-block;
+      padding: 2px 8px; border-radius: 10px;
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    }
+    .role-bat  { background:rgba(52,152,219,0.15); color:#3498DB; border:1px solid rgba(52,152,219,0.3); }
+    .role-bowl { background:rgba(231,76,60,0.15);  color:#E74C3C; border:1px solid rgba(231,76,60,0.3); }
+    .role-ar   { background:rgba(245,166,35,0.15); color:var(--gold); border:1px solid rgba(245,166,35,0.3); }
+    .role-wk   { background:rgba(155,89,182,0.15); color:#9B59B6; border:1px solid rgba(155,89,182,0.3); }
+    .badge-c  {
+      display:inline-block; padding:1px 6px;
+      background:var(--gold); color:var(--bg-dark);
+      font-size:9px; font-weight:700; letter-spacing:1px;
+      border-radius:3px; margin-left:3px;
+    }
+    .badge-wk { background:#9B59B6; color:#fff; }
+
+    .player-card-body { padding: 10px 16px 12px; }
+    .p-team-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-muted);
+      margin-bottom: 10px; letter-spacing: 0.5px;
+    }
+    .p-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .p-no-team {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 7px;
+      background: rgba(255,165,2,0.12);
+      color: var(--warning);
+      border: 1px solid rgba(255,165,2,0.3);
+      border-radius: 4px; font-size: 10px; font-weight: 700;
+    }
+    .p-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin-bottom: 10px; }
+    .p-stat { text-align: center; }
+    .p-stat-n {
+      font-family: 'Teko', sans-serif;
+      font-size: 18px; color: var(--gold); font-weight: 600; line-height: 1;
+    }
+    .p-stat-l { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+    .p-actions { display: flex; gap: 6px; }
+    .p-actions .btn { flex: 1; padding: 8px 6px; font-size: 11px; }
+
+    /* ---- FAB (Floating Action Button) — mobile ---- */
+    .fab {
+      display: none;
+      position: fixed;
+      bottom: 24px; right: 20px;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+      color: var(--bg-dark);
+      border: none; border-radius: 50%;
+      font-size: 26px; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(245,166,35,0.5);
+      z-index: 999;
+      align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .fab:active { transform: scale(0.92); }
+
+    @media (max-width: 560px) {
+      .fab { display: flex; }
+      /* Hide top ADD PLAYER button on small screens */
+      #addPlayerBtn { display: none; }
+      .players-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ---- Page actions ---- */
+    .page-actions {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 14px;
+      gap: 10px; flex-wrap: wrap;
+    }
+    .counter-text {
+      font-size: 13px; color: var(--text-muted);
+      letter-spacing: 1px; font-weight: 600;
+    }
+    .counter-text span { color: var(--gold); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">MPL</div>
+      <div class="sidebar-title"><h2>MPL ADMIN</h2><p>Control Panel</p></div>
+    </div>
+    <div class="sidebar-section-label">Main Menu</div>
+    <ul class="sidebar-nav">
+      <li><a href="dashboard.html"><span class="icon">📊</span> Dashboard</a></li>
+      <li><a href="teams.html"><span class="icon">🛡️</span> Teams</a></li>
+      <li><a href="players.html" class="active"><span class="icon">👥</span> Players</a></li>
+      <li><a href="matches.html"><span class="icon">🏏</span> Matches</a></li>
+    </ul>
+    <div class="sidebar-section-label">Live</div>
+    <ul class="sidebar-nav">
+      <li><a href="scoring.html"><span class="icon">🔴</span> Live Scoring</a></li>
+    </ul>
+    <div class="sidebar-section-label">Config</div>
+    <ul class="sidebar-nav">
+      <li><a href="settings.html"><span class="icon">⚙️</span> Settings</a></li>
+      <li><a href="../index.html" target="_blank"><span class="icon">🌐</span> View Website</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <button class="logout-btn" id="logoutBtn">🚪 LOGOUT</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="overlay"></div>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="mobile-toggle" id="mobileToggle">☰</button>
+        <div class="topbar-title"><h1>PLAYERS</h1><p>Squad management</p></div>
+      </div>
+      <div class="topbar-right">
+        <div class="user-badge">
+          <div class="user-avatar" id="userAvatar">S</div>
+          <div class="user-info"><p id="userName">Scorer</p><span>ADMIN</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Teams Warning -->
+    <div id="noTeamsWarning" class="warning-bar" style="display:none;">
+      <span>⚠️</span>
+      <span>Pehle teams add karo!</span>
+      <a href="teams.html">GO TO TEAMS →</a>
+    </div>
+
+    <!-- Page Actions -->
+    <div class="page-actions">
+      <div class="counter-text" id="playerCounter"><span>0</span> / 0 Players</div>
+      <button class="btn btn-primary" id="addPlayerBtn">➕ ADD PLAYER</button>
+    </div>
+
+    <!-- Team Summary Bar -->
+    <div class="team-summary-bar" id="teamSummaryBar"></div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="filter-search-wrap">
+        <span class="filter-search-icon">🔍</span>
+        <input type="text" id="searchInput" class="filter-search" placeholder="Search player..." />
+      </div>
+      <select id="filterTeam" class="filter-select">
+        <option value="all">All Teams</option>
+      </select>
+      <select id="filterRole" class="filter-select">
+        <option value="all">All Roles</option>
+        <option value="batsman">🏏 Batsman</option>
+        <option value="bowler">🎯 Bowler</option>
+        <option value="allrounder">⭐ All-Rounder</option>
+        <option value="wicketkeeper">🧤 Wicket-Keeper</option>
+      </select>
+      <button class="filter-reset-btn" id="resetFilters">✕ RESET FILTERS</button>
+    </div>
+
+    <!-- Players Grid -->
+    <div class="players-grid" id="playersGrid"></div>
+
+  </main>
+</div>
+
+<!-- FAB (mobile floating button) -->
+<button class="fab" id="fabAddPlayer" title="Add Player">＋</button>
+
+<!-- =====================================================
+     BOTTOM SHEET — ADD / EDIT PLAYER
+===================================================== -->
+<div class="sheet-overlay" id="playerModal">
+  <div class="bottom-sheet" id="bottomSheet">
+
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-header">
+      <h2 id="sheetTitle">ADD PLAYER</h2>
+      <button class="sheet-close" id="closeSheet" aria-label="Close">✕</button>
+    </div>
+
+    <!-- Mini Live Preview -->
+    <div class="mini-preview">
+      <div class="mini-avatar" id="previewAvatar">
+        PN
+        <div class="jersey-badge" id="previewJersey">0</div>
+      </div>
+      <div class="mini-info">
+        <h3 id="previewPlayerName">PLAYER NAME</h3>
+        <p id="previewPlayerRole">No Team • Batsman</p>
+      </div>
+    </div>
+
+    <form id="playerForm">
+      <div class="sheet-body">
+
+        <!-- Basic Info -->
+        <div class="sec-label">BASIC INFO</div>
+
+        <div class="input-group">
+          <label class="input-label" for="playerName">Full Name *</label>
+          <input type="text" id="playerName" class="input-field"
+                 placeholder="e.g. Rohit Sharma"
+                 required maxlength="40"
+                 autocomplete="off" autocorrect="off" autocapitalize="words" />
+        </div>
+
+        <div class="two-col">
+          <div class="input-group">
+            <label class="input-label" for="playerAge">Age</label>
+            <input type="number" id="playerAge" class="input-field"
+                   placeholder="22" min="10" max="60"
+                   inputmode="numeric" />
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="playerJersey">Jersey No.</label>
+            <input type="number" id="playerJersey" class="input-field"
+                   placeholder="18" min="0" max="999"
+                   inputmode="numeric" />
+            <p class="input-hint">Unique per team</p>
+          </div>
+        </div>
+
+        <!-- Role -->
+        <div class="sec-label">PLAYING ROLE</div>
+        <input type="hidden" id="playerRole" value="batsman" />
+        <div class="role-grid" id="roleGrid">
+          <div class="role-tile picked" data-role="batsman">
+            <div class="role-tile-icon">🏏</div>
+            <div class="role-tile-name">Batsman</div>
+          </div>
+          <div class="role-tile" data-role="bowler">
+            <div class="role-tile-icon">🎯</div>
+            <div class="role-tile-name">Bowler</div>
+          </div>
+          <div class="role-tile" data-role="allrounder">
+            <div class="role-tile-icon">⭐</div>
+            <div class="role-tile-name">All-Rounder</div>
+          </div>
+          <div class="role-tile" data-role="wicketkeeper">
+            <div class="role-tile-icon">🧤</div>
+            <div class="role-tile-name">Keeper</div>
+          </div>
+        </div>
+
+        <!-- Team -->
+        <div class="sec-label">TEAM</div>
+        <div class="input-group">
+          <label class="input-label" for="playerTeam">Assign to Team</label>
+          <select id="playerTeam" class="input-field" style="cursor:pointer;"></select>
+          <p class="input-hint">Baad mein bhi change kar sakte ho</p>
+        </div>
+
+        <!-- Captain / WK toggles -->
+        <div class="sec-label">SPECIAL ROLE</div>
+        <div class="toggle-row">
+          <!-- Hidden real checkboxes -->
+          <input type="checkbox" id="playerIsCaptain" />
+          <input type="checkbox" id="playerIsWK" />
+
+          <div class="toggle-chip" id="captainToggle" onclick="toggleChip('captainToggle','playerIsCaptain')">
+            👑 Captain
+          </div>
+          <div class="toggle-chip" id="wkToggle" onclick="toggleChip('wkToggle','playerIsWK')">
+            🧤 WK
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="sheet-footer">
+        <button type="button" class="btn-cancel" id="cancelSheet">CANCEL</button>
+        <button type="submit" class="btn-save">💾 SAVE PLAYER</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script src="js/sheets-api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/players.js"></script>
+
+<script>
+  /* Toggle chip visual helper */
+  function toggleChip(chipId, checkboxId) {
+    var chip = document.getElementById(chipId);
+    var cb   = document.getElementById(checkboxId);
+    cb.checked = !cb.checked;
+    chip.classList.toggle('on', cb.checked);
+  }
+
+  /* Set chip state from checkbox value */
+  function syncChips() {
+    document.getElementById('captainToggle').classList.toggle(
+      'on', document.getElementById('playerIsCaptain').checked);
+    document.getElementById('wkToggle').classList.toggle(
+      'on', document.getElementById('playerIsWK').checked);
+  }
+</script>
+</body>
+</html>

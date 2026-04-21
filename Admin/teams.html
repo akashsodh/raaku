@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPL Admin - Teams</title>
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">MPL</div>
+        <div class="sidebar-title">
+          <h2>MPL ADMIN</h2>
+          <p>Control Panel</p>
+        </div>
+      </div>
+
+      <div class="sidebar-section-label">Main Menu</div>
+      <ul class="sidebar-nav">
+        <li><a href="dashboard.html"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="teams.html" class="active"><span class="icon">🛡️</span> Teams</a></li>
+        <li><a href="players.html"><span class="icon">👥</span> Players</a></li>
+        <li><a href="matches.html"><span class="icon">🏏</span> Matches</a></li>
+      </ul>
+
+      <div class="sidebar-section-label">Live</div>
+      <ul class="sidebar-nav">
+        <li><a href="scoring.html"><span class="icon">🔴</span> Live Scoring</a></li>
+      </ul>
+
+      <div class="sidebar-section-label">Config</div>
+      <ul class="sidebar-nav">
+        <li><a href="settings.html"><span class="icon">⚙️</span> Settings</a></li>
+        <li><a href="../index.html" target="_blank"><span class="icon">🌐</span> View Website</a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">🚪 LOGOUT</button>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="overlay"></div>
+
+    <!-- ========== MAIN ========== -->
+    <main class="main">
+
+      <!-- Topbar -->
+      <div class="topbar">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="mobile-toggle" id="mobileToggle">☰</button>
+          <div class="topbar-title">
+            <h1>TEAMS</h1>
+            <p>Manage the 6 teams of MPL</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="user-badge">
+            <div class="user-avatar" id="userAvatar">S</div>
+            <div class="user-info">
+              <p id="userName">Scorer</p>
+              <span>ADMIN</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page Actions -->
+      <div class="page-actions">
+        <div class="counter-badge" id="teamCounter"><span>0</span> / 6 Teams</div>
+        <button class="btn btn-primary" id="addTeamBtn">➕ ADD TEAM</button>
+      </div>
+
+      <!-- Teams Grid -->
+      <div class="admin-teams-grid" id="teamsGrid">
+        <!-- rendered by JS -->
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ========== TEAM MODAL ========== -->
+  <div class="modal-overlay" id="teamModal">
+    <div class="modal">
+
+      <div class="modal-header">
+        <h2 id="modalTitle">ADD NEW TEAM</h2>
+        <button class="modal-close" id="closeModal" aria-label="Close">✕</button>
+      </div>
+
+      <form id="teamForm">
+        <div class="modal-body">
+
+          <!-- Live Preview -->
+          <div class="team-preview" id="teamPreview">
+            <div class="preview-logo" id="previewLogo">TN</div>
+            <div class="preview-name" id="previewName">TEAM NAME</div>
+            <div class="preview-owner" id="previewOwner">Owner: Owner Name</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="teamName">Team Name *</label>
+              <input type="text" id="teamName" class="form-input" placeholder="e.g. Mamana Mavericks" required maxlength="30" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="teamCode">Short Code *</label>
+              <input type="text" id="teamCode" class="form-input" placeholder="MM" required maxlength="4" style="text-transform:uppercase;" />
+              <p class="form-hint">2-4 letters (auto-filled)</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="teamOwner">Owner Name *</label>
+            <input type="text" id="teamOwner" class="form-input" placeholder="e.g. Rahul Sharma" required maxlength="40" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="teamCaptain">Captain (Optional)</label>
+            <input type="text" id="teamCaptain" class="form-input" placeholder="Can be set later" maxlength="40" />
+            <p class="form-hint">Captain baad mein bhi set kar sakte ho</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Team Color *</label>
+            <input type="hidden" id="teamColor" value="#E63946" />
+            <div class="color-picker" id="colorPicker"></div>
+            <p class="form-hint">Ye color website pe team ki identity hogi</p>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancelBtn">CANCEL</button>
+          <button type="submit" class="btn btn-primary">💾 SAVE TEAM</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <script src="js/sheets-api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/teams.js"></script>
+</body>
+</html>
